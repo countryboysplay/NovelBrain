@@ -1,0 +1,128 @@
+---
+name: showrunner
+description: Use when a Novel Brain command runs a step of the book (write, revise or review a scene, plan or check a chapter, check an act or the book, add a character). It is the orchestrator procedure that dispatches the kit agents, gates each stage, runs acceptance and ends with the one-line JSON result the app reads.
+---
+
+# Showrunner
+
+You run exactly one step of writing this book, in this session, and then stop. You are the orchestrator: the agents in `.claude/agents/` do the writing and reviewing, and Novel Brain's acceptance step changes canon and the manuscript. You decide what runs next from the files they leave behind.
+
+## Ground rules
+1. Run the procedure yourself, in this main session. Subagents cannot dispatch subagents, so never hand the procedure to an agent; you dispatch every agent directly with the Agent tool.
+2. Keep your context small. Never read a whole draft, a whole manuscript scene or the manuscript folder. Read plans, `run/state.yaml`, `notes/open-questions.yaml`, review frontmatter and the FAIL and FLAG finding lines of reviews. To see a review's verdict, Grep for `^verdict:` or Read the file with `limit: 8`. To collect findings, Grep for `^[0-9]+\. (FAIL|FLAG)\.` with 3 lines of context after.
+3. Every dispatch prompt names the agent's target id, the round, the mode or stage when the agent has modes, and any extra files to read. Ask every agent to write its files and reply in at most 5 lines. Never paste prose or whole reviews into a prompt; name the file instead.
+4. Agents that are independent of each other run in parallel: send their Agent calls in one message.
+5. You may write only these files: `reviews/SC-###/park.md`, the `status` field of `outline/scenes/SC-###.yaml`, and `notes/open-questions.yaml`. Never write `canon/`, `manuscript/`, `run/`, `book.yaml`, `series.yaml`, `.claude/`, `.novelbrain/` or `.git/`; the guard blocks it and only acceptance changes canon and the manuscript. Never write drafts, proposals or reviews yourself; the agents own them.
+6. The only shell commands you may run are `node .novelbrain/accept.mjs SC-###` exactly as written (from the book folder, no `cd`, no pipes, no redirection) and read-only `git diff`, `git log` and `git show` with plain flags such as `--stat`, `--oneline` or `-n 5`. Never run any other shell command; the guard refuses it.
+7. Your final reply ends with one line of JSON and nothing after it, as the step's Reply section shows. Put any explanation on the lines before it. The app parses only that last line. The JSON always has the keys `"step"`, `"id"`, `"outcome"`, `"rounds"`, `"commit"`, `"revise"` and `"note"`, in that order, on one line, with no code fence around it.
+8. If a step cannot start or continue (a missing plan, an archived book, an agent that keeps returning `BLOCKED`, a tool error you cannot work around), stop and reply with outcome `error` and the reason in `note`.
+
+## Reading the agents' replies
+- `author` returns `DRAFTED SC-### round N` or `BLOCKED: <reason>`. `canon-keeper` returns `PROPOSED P-#### for SC-###`. `story-architect` returns `DONE` or `BLOCKED: <reason>`.
+- Reviewers return `PASS`, `FLAG` or `FAIL` and their review path. The file is the record; trust the file's `verdict:` over the reply.
+- `gate-checker` returns `STAGES PASS: <stages>`, `STAGES FLAG: <stages>` or `STAGES FAIL: <stages>`, then for a FAIL the agents that must redo work. A draft-stage or proposals-stage gate leaves `verdict: FAIL` in `gate.md` because of `GATE-REV-00` even when its stages pass; that is expected and clears only at the reviews-stage gate. Judge an early gate by its `STAGES` line, never by the file.
+
+## Rounds
+- A round is one pass of draft, proposal and seven reviews (six reviewers plus the gate) for one scene. Every review file carries `round:` in its frontmatter, and acceptance requires all seven at the same round.
+- The first round of a run is R = 1 + the highest `round:` in `reviews/SC-###/*.md` (Grep `^round:` in that folder; `park.md` has none). With no reviews yet, R = 1.
+- A run gets at most three rounds: R, R + 1 and R + 2. The last of them is the last round. For a scene written for the first time that is round 3.
+- `rounds` in the reply is the number of rounds this run used.
+
+## Scene procedure (`/write-scene SC-###`)
+1. Read `run/state.yaml` (read only, to see the run's settings), `outline/scenes/SC-###.yaml` and `notes/open-questions.yaml`. Use Glob on `reviews/SC-###/` to see which review files exist, and work out R as Rounds says. If the plan is missing or its status is `accepted`, stop and reply `error`. If `reviews/SC-###/park.md` exists, the scene was parked before and the writer has released it: Read it, and give its reason to the author in the first round as extra findings.
+2. If the plan's status is `planned` or `needs-you`, set it to `drafting` (change only the `status` line). Leave an `accepted` status alone (a revision that does not replan); acceptance sets it again.
+3. Draft. Dispatch `author` with the scene id and round R. A redraft is any round after this run's first round; say so, and that it must read every review file of round R - 1 in `reviews/SC-###/`, plus any extra findings files or refusal reasons you carry forward. The first round of a run is never a redraft, even when R is above 1 (a revision, a released park, or a run restarted after an error): tell the author it is not a redraft and give it only the extra findings, if any (the revision's review file, the park reason). Ask it to use one of its at most 5 reply lines for the open question ids (from `notes/open-questions.yaml`) the scene answers on the page, and any new question the scene deliberately leaves the reader with, in one sentence each.
+4. Propose. Dispatch `canon-keeper` with the scene id and round R.
+5. Early gate. Dispatch `gate-checker` with target SC-###, round R, stages `draft, proposals`. If it returns `STAGES FAIL`, re-dispatch the agents it names (author or canon-keeper) with `reviews/SC-###/gate.md` as findings to fix, then run the same gate again. If the author is re-dispatched, re-dispatch canon-keeper after it, because the proposal must describe the current draft. Allow two such fixes per round; if the gate still fails, the round has failed: carry `gate.md`'s findings into the next round as extra findings and go to step 9.
+6. If the plan's status is `drafting`, set it to `review`. Review. In one message, dispatch in parallel `continuity-reviewer`, `character-reviewer`, `developmental-editor`, `line-editor`, `audience-reviewer` and `canon-auditor`, each with the scene id, round R and scene mode. They write `reviews/SC-###/continuity.md`, `character.md`, `developmental.md`, `line.md`, `audience.md` and `canon-auditor.md`.
+7. Final gate. Always dispatch `gate-checker` (model opus) with target SC-###, round R, stage `reviews`, even when every reviewer passed; acceptance requires its `gate.md` at round R. If it returns `STAGES FAIL`, re-dispatch only the reviewers it names, for the same round R, then run the reviews-stage gate again. Allow two such fixes per round; if the gate still fails, the round has failed: carry `gate.md`'s findings forward and go to step 9.
+8. Verdicts. Grep `^verdict:` in the seven files `continuity.md`, `character.md`, `developmental.md`, `line.md`, `audience.md`, `canon-auditor.md` and `gate.md`. If none is FAIL, go to step 10. If any is FAIL, the round has failed; go to step 9.
+9. A failed round.
+   - If R is the last round, park the scene (Parking below) and reply `parked`.
+   - Otherwise start round R + 1. If the only FAIL verdict is in `canon-auditor.md` and its FAIL findings are about the proposal rather than the prose (a change the proposal missed, invented or misstated), the draft can stand: re-dispatch `canon-keeper` with `reviews/SC-###/canon-auditor.md` as findings, then go back to step 5 with only the `proposals` stage, then step 6. Rewriting the proposal makes every review older than it, so all six reviewers and the final gate always run again at the new round; never rerun canon-keeper after the reviews without rerunning them. In every other case go back to step 3 with round R + 1.
+10. Accept. Run exactly `node .novelbrain/accept.mjs SC-###`. It prints one line of JSON. Once it prints `"ok":true`, the outcome is `accepted` with that commit, whatever happens afterwards.
+    - `{"ok":true,"commit":"<hash>"}`: the scene is accepted. Acceptance moved the draft into `manuscript/`, applied the proposal to canon, set the plan's status to `accepted` and made a git commit. Now update `notes/open-questions.yaml` from the author's last reply: set `answered: SC-###` on each question the scene answered, and add each new question it raised with the next free `Q-###` id, `raised: SC-###`, `answerBy: null` and `answered: null`. Never change any other entry. If the update fails (the hook rejects the file, or the author's line cannot be read), leave the file as it was, say so in `note`, and still reply `accepted` with the commit hash; ground rule 8 never applies after a successful acceptance.
+    - `{"ok":false,"reasons":[...]}`: acceptance refused and changed nothing. Only these reasons are scene findings:
+      - a reason about a review file (it starts with a reviewer name followed by `review`, for example `line review is at round 1, not 2`), or says `reviews are older`: the reviews must run again;
+      - a reason about `drafts/SC-###.md`: the draft must be rewritten;
+      - a reason about a proposal (`proposals/P-#### is not a valid proposal`, or one starting `P-#### change`): send it through the canon-keeper path of step 9, as if canon-auditor had failed the proposal.
+      Treat those as FAIL findings for the next round and go to step 9; such a refusal counts as a failed round. Every other reason (anything about `book.yaml`, `canon/`, `outline/`, git, the lock or journal, a stray file in `proposals/`, or an internal error) is outside what the agents can fix: reply `error` with the reasons in `note`, without spending a round.
+
+### Parking
+Write `reviews/SC-###/park.md` (Read it first if it exists, then replace it in full):
+```markdown
+---
+scene: SC-012
+reason: >-
+  After three rounds the line review still fails MG-LANG-02 on the opening paragraph, and the audience review fails MG-CON-10 because the plan's beat 3 asks for a death on the page.
+---
+```
+`reason` is one paragraph naming the blocking FAIL findings by reviewer and rule id, and what the writer must decide. Then set the plan's status to `needs-you`. A must-fix content limit FAIL (for example `MG-CON-10`, content beyond the audience's defaults) that survives the last round is always parked for the writer; never work around it by changing the plan yourself.
+
+### Reply
+```
+{"step":"scene","id":"SC-012","outcome":"accepted","rounds":2,"commit":"abc1234","revise":[],"note":"Accepted at round 2; Q-004 answered."}
+```
+`outcome` is `accepted`, `parked` or `error`. `commit` is the short hash from acceptance, or `null` when not accepted. `revise` is always `[]` for a scene. `note` is one sentence.
+
+## Revision procedure (`/revise-scene SC-### <review file>`)
+The scene is usually already accepted, and a chapter or act check named it in the `revise` list of the given review file (for example `reviews/CH-03/arc.md`).
+1. Read the plan and the review file's frontmatter, and Grep the review file for the findings that name this scene or quote it. Those findings are the extra findings for the first round.
+2. Decide whether the findings need a new plan (a missing or wrong beat, goal or arc beat in the plan itself) or only new prose. If they need a new plan: an accepted scene's plan is locked, so first reopen it by setting its status to `planned`, then dispatch `story-architect` with the scene id and the review file, asking it to change only this scene's plan as the findings require.
+3. Run the scene procedure from step 2 with these differences. Work out R from the existing reviews as Rounds says (the scene's earlier reviews count, so R is usually above 3). Tell the author the scene is a revision: it starts from the accepted text in `manuscript/SC-###.md` (there is no draft), reads the extra findings, and writes the full revised scene to `drafts/SC-###.md`. Tell the canon-keeper the scene is a revision: canon already holds what the earlier version established with source SC-###, so it proposes only what the revision adds or changes, using a retcon where the revision contradicts a fact the earlier version established. Tell the canon-auditor the scene is a revision: its blind list leaves out facts already established in canon (including those with source SC-###, from the earlier version of this scene), and lists a fact the revision changes as one retcon item. Tell the continuity-reviewer the scene is a revision: facts with source SC-### come from the earlier version of this scene, so a change to them that the extra findings file asks for is intended, not a contradiction; the canon-keeper proposes it as a retcon.
+4. Reply exactly as the scene procedure does, with `"step":"scene"`. If the revision parks, the accepted text stays in `manuscript/` and the writer decides.
+
+## Review-only procedure (`/review-scene SC-###`)
+For the writer, when a draft and proposal exist and only the reviews must run. Work out R as Rounds says, then run scene steps 6 to 8 once: no redraft, no acceptance. Reply:
+```
+{"step":"review","id":"SC-012","outcome":"pass","rounds":1,"commit":null,"revise":[],"note":"No FAIL verdicts at round 4."}
+```
+`outcome` is `pass` when no verdict is FAIL, `fail` when any is (name the failing reviewers in `note`), or `error`.
+
+## Chapter plan procedure (`/plan-chapter CH-##`)
+1. Read `outline/outline.yaml` and `notes/open-questions.yaml`. The round is 1 + the highest `round:` in `reviews/CH-##/gate.md` and `reviews/CH-##/developmental.md`, or 1.
+2. Dispatch `story-architect` to plan every not yet accepted scene of the chapter (adding the chapter and its scene ids to the outline if they are not there), with the open questions the chapter must answer.
+3. Dispatch `gate-checker` with target CH-##, the round and stage `plan`, and `developmental-editor` with target CH-##, the round and plan mode, in parallel.
+4. If the gate returns `STAGES FAIL` or the developmental verdict is FAIL, and fewer than three rounds have run, dispatch `story-architect` again with `reviews/CH-##/gate.md` and `reviews/CH-##/developmental.md` as findings, then repeat step 3 at the next round. After three failed rounds, stop.
+5. Reply:
+```
+{"step":"plan","id":"CH-03","outcome":"pass","rounds":1,"commit":null,"revise":[],"note":"Four scenes planned."}
+```
+`outcome` is `pass`, `parked` (three failed rounds; name the blocking findings in `note`) or `error`.
+
+## Chapter check procedure (`/check-chapter CH-##`)
+1. Read `outline/outline.yaml` for the chapter's scene ids, then Grep `^status:` in each `outline/scenes/SC-###.yaml` and confirm every one is `accepted`; if not, reply `error`. The round is 1 + the highest `round:` in `reviews/CH-##/arc.md` and `reviews/CH-##/flow.md`, or 1.
+2. Dispatch `arc-auditor` and `flow-reader` in parallel with target CH-## and the round. They write `reviews/CH-##/arc.md` and `reviews/CH-##/flow.md`, each with a `revise:` list when it fails.
+3. Dispatch `gate-checker` with target CH-##, the round, stage `reviews`, and the reviews `arc.md` and `flow.md`. If it returns `STAGES FAIL`, re-dispatch the reviewers it names once and gate again.
+4. Read the `verdict:` and `revise:` lines of `arc.md` and `flow.md`.
+   - Both PASS or FLAG, and the gate's stages pass: outcome `pass`.
+   - Either FAIL: outcome `revise`, with `revise` the union of both `revise:` lists, keeping only accepted scene ids of this chapter, in outline order. Put the review file each scene came from in `note`, for example `SC-011 from reviews/CH-03/arc.md`.
+   - Either FAIL with an empty union, or the gate still failing after its fix: outcome `parked`, naming the problem in `note`.
+5. Reply:
+```
+{"step":"chapter","id":"CH-03","outcome":"revise","rounds":1,"commit":null,"revise":["SC-011"],"note":"SC-011 from reviews/CH-03/arc.md: Ruth's arc beat is missing."}
+```
+`revise` is `[]` unless the outcome is `revise`.
+
+### Shared review files
+The chapter plan and chapter check procedures both write `reviews/CH-##/gate.md` (and the plan's `developmental.md` sits in the same folder), and the act and book checks both write `reviews/ACT-#/continuity.md` and `gate.md`. That is intended: each run rewrites the file in full at its own round, and nothing reads the earlier file once the step that wrote it has finished.
+
+## Act check procedure (`/check-act ACT-#`)
+1. Read `outline/outline.yaml` for the act's chapters and scenes. The round is 1 + the highest `round:` in `reviews/ACT-#/*.md`, or 1.
+2. In parallel, dispatch `developmental-editor` in act mode and `continuity-reviewer` in sweep mode, each with target ACT-# and the round. They read the act's plans, its accepted scenes and `canon/`, and write `reviews/ACT-#/developmental.md` and `reviews/ACT-#/continuity.md`.
+3. Dispatch `gate-checker` (model opus) with target ACT-#, the round, stage `reviews`, and the reviews `developmental.md` and `continuity.md`. If it returns `STAGES FAIL`, re-dispatch the reviewers it names once and gate again.
+4. Decide the outcome as the chapter check does, from the `verdict:` and `revise:` lines of the two act reviews, keeping only accepted scene ids of this act.
+5. Reply:
+```
+{"step":"act","id":"ACT-1","outcome":"pass","rounds":1,"commit":null,"revise":[],"note":"Act 1 holds; two FLAGs for the writer."}
+```
+
+## Book check procedure (`/check-book [focus]`)
+Dispatch `continuity-reviewer` in sweep mode once per act, in parallel, each with target ACT-# and round 1 + that act's highest existing review round; each sweep reads all of `canon/` as well as its act. If the writer gave a focus with the command, give it to each sweep as what to look at first. Then dispatch `gate-checker` once per act with stage `reviews` and the review `continuity.md`. Reply as the act check does, with `"step":"book"`, `"id":"BOOK"` and the union of the `revise:` lists.
+
+## New character procedure (`/new-character <description>`)
+Dispatch `story-architect` with the writer's description, asking it to create one character file in `bible/characters/` and to change no plan or outline. Reply:
+```
+{"step":"character","id":"CHAR-RUTH","outcome":"done","rounds":1,"commit":null,"revise":[],"note":"Created bible/characters/CHAR-RUTH.md."}
+```
+`outcome` is `done` or `error`.

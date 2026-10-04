@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:kit
+      - name: Committed bundles match a fresh build
+        shell: bash
+        run: |
+          npm run build:hooks
+          git diff --exit-code -- resources/
+      - run: npm run smoke

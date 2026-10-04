@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Edit",
+      "Write",
+      "Agent",
+      "Skill",
+      "Bash(node .novelbrain/accept.mjs *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)"
+    ],
+    "deny": [
+      "Edit(/canon/**)",
+      "Edit(/manuscript/**)",
+      "Edit(/run/**)",
+      "Edit(/book.yaml)",
+      "Edit(/series.yaml)",
+      "Edit(/.claude/**)",
+      "Edit(/.novelbrain/**)",
+      "Edit(/.git/**)"
+    ]
+  }
+}

@@ -1,0 +1,2 @@
+facts:
+  - { id: FACT-001, statement: The seed is not from the co-op, status: established, source: bible, supersedes: null }

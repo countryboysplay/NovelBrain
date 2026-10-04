@@ -1,0 +1,10 @@
+id: SC-001
+title: The Field
+goal: Ruth finds the dead row
+pov: CHAR-RUTH
+location: LOC-FIELD
+storyTime: "Day 1, dawn"
+beats: [Ruth walks the rows]
+arcBeats: [{ character: CHAR-RUTH, beat: denial }]
+mustReveal: [FACT-001]
+status: planned

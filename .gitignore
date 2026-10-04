@@ -1,0 +1,27 @@
+node_modules/
+out/
+dist/
+test-results/
+playwright-report/
+screens/
+graphify-out/
+.claude/settings.local.json
+.superpowers/
+.impeccable/review/
+.impeccable/mocks/
+*.log
+.env
+.env.*
+
+# Development material stays local (docs/superpowers/public-repo.md)
+docs/superpowers/
+docs/research/
+docs/facts.md
+docs/PROJECT-*.md
+docs/SERIES-BRAIN.md
+PRODUCT.md
+AGENTS.md
+brain/
+.impeccable/
+/.claude/
+samples/

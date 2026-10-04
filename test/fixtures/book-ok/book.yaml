@@ -1,0 +1,9 @@
+id: sample-book
+title: Sample Book
+status: active
+audience: adult
+genres: [literary]
+series: null
+predecessor: null
+wordTarget: 60000
+kitVersion: "1"

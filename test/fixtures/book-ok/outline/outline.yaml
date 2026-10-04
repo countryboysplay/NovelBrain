@@ -1,0 +1,7 @@
+acts:
+  - id: ACT-1
+    title: Beginning
+    chapters:
+      - id: CH-01
+        title: One
+        scenes: [SC-001]

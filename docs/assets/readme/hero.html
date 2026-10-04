@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<!-- Source for hero.png. Regenerate with: node scripts/render-readme-art.mjs -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Permanent+Marker&display=block" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: transparent; }
+  .wall {
+    position: relative; width: 1600px; height: 480px; border-radius: 28px; overflow: hidden;
+    background:
+      radial-gradient(ellipse 900px 520px at 30% 18%, rgba(255, 214, 140, .16), transparent 70%),
+      radial-gradient(ellipse 700px 400px at 100% 100%, rgba(19, 163, 127, .10), transparent 70%),
+      #0e2638;
+  }
+  svg.splat { position: absolute; inset: 0; }
+  .card {
+    position: absolute; left: 150px; top: 112px; width: 240px; height: 240px; background: #f6f3ec;
+    border-radius: 6px; transform: rotate(-3deg); box-shadow: 0 18px 36px rgba(0, 0, 0, .35);
+  }
+  .card svg.mark { position: absolute; left: 22px; top: 22px; }
+  .tape {
+    position: absolute; left: 60px; top: -18px; width: 120px; height: 34px; background: rgba(240, 222, 160, .85);
+    transform: rotate(4deg);
+  }
+  .words { position: absolute; left: 470px; top: 112px; color: #f6f3ec; }
+  h1 {
+    margin: 0; font: 800 132px/1 'Bricolage Grotesque', sans-serif; letter-spacing: -4px;
+    font-variation-settings: 'opsz' 96;
+  }
+  .under { display: block; margin-top: 4px; }
+  p { margin: 22px 0 0; font: 500 36px/1.2 'Bricolage Grotesque', sans-serif; color: #f6f3ec; opacity: .92; }
+  .note {
+    position: absolute; right: 70px; bottom: 44px; font: 32px 'Permanent Marker', cursive; color: #ffc21a;
+    transform: rotate(-4deg);
+  }
+</style>
+</head>
+<body>
+<div class="wall">
+  <svg class="splat" width="1600" height="480" viewBox="0 0 1600 480">
+    <g opacity=".55">
+      <circle cx="1390" cy="70" r="26" fill="#d81b72"/><circle cx="1428" cy="104" r="7" fill="#d81b72"/><circle cx="1350" cy="40" r="5" fill="#d81b72"/>
+      <circle cx="1445" cy="58" r="4" fill="#d81b72"/><circle cx="1372" cy="118" r="3" fill="#d81b72"/>
+      <circle cx="90" cy="410" r="20" fill="#3a5cff"/><circle cx="128" cy="440" r="6" fill="#3a5cff"/><circle cx="58" cy="380" r="4" fill="#3a5cff"/>
+      <circle cx="1180" cy="430" r="9" fill="#13a37f"/><circle cx="1206" cy="452" r="4" fill="#13a37f"/>
+      <circle cx="430" cy="58" r="8" fill="#e0342a"/><circle cx="452" cy="40" r="3" fill="#e0342a"/><circle cx="410" cy="76" r="3" fill="#e0342a"/>
+      <circle cx="1540" cy="300" r="12" fill="#ffc21a"/><circle cx="1566" cy="276" r="4" fill="#ffc21a"/>
+      <circle cx="720" cy="440" r="5" fill="#ffc21a"/><circle cx="760" cy="455" r="3" fill="#d81b72"/>
+    </g>
+    <path d="M1050 420 C1150 380 1260 400 1330 360 S1480 330 1560 340" fill="none" stroke="#13a37f" stroke-width="10" stroke-linecap="round" opacity=".28"/>
+    <path d="M1390 96 L1392 150" stroke="#d81b72" stroke-width="5" stroke-linecap="round" opacity=".45"/>
+  </svg>
+  <div class="card">
+    <div class="tape"></div>
+    <svg class="mark" width="196" height="196" viewBox="10 9 44 46">
+      <path d="M13.5 13 Q18 11 22.5 12.5 L22 33 L22.8 51 Q18 53 13 51.5 L13.8 32 Z" fill="#3a5cff"/>
+      <path d="M14 13.5 Q19 10.5 23.5 12.5 L50.5 49 Q46 53.5 41 51.5 Z" fill="#e0342a"/>
+      <path d="M41.5 12.5 Q46 11 50.8 12.8 L50.2 32 L51 51.5 Q46.5 53 41.8 51.2 L42.2 31 Z" fill="#ffc21a"/>
+      <g stroke="#0e2638" stroke-width="0.8" stroke-linecap="round" opacity="0.35" fill="none">
+        <path d="M16.5 20 L16.2 44"/><path d="M28 22 L40 39"/><path d="M45 18 L45.4 30"/><path d="M47.5 36 L47.2 47"/>
+      </g>
+    </svg>
+  </div>
+  <div class="words">
+    <h1>Novel Brain</h1>
+    <svg class="under" width="420" height="20" viewBox="0 0 420 20"><path d="M6 12 L190 6 L414 10" fill="none" stroke="#e0342a" stroke-width="11" stroke-linecap="round"/></svg>
+    <p>A studio where Claude Code writes novels.</p>
+  </div>
+  <div class="note">Canon is truth.</div>
+</div>
+</body>
+</html>

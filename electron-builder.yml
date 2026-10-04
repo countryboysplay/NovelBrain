@@ -1,0 +1,27 @@
+appId: com.countryboysplay.novelbrain
+productName: Novel Brain
+directories:
+  output: dist
+files:
+  - out/**
+  - package.json
+asarUnpack:
+  - node_modules/@lydell/**
+extraResources:
+  - from: resources/hooks
+    to: hooks
+  - from: resources/accept
+    to: accept
+  - from: resources/brand
+    to: brand
+  - from: kit
+    to: kit
+    filter: ["fiction/**"]
+win:
+  icon: resources/brand/icon.ico
+  target: nsis
+  artifactName: NovelBrain-Setup-${version}.${ext}
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true

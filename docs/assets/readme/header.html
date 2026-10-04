@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<!-- Source for the h-*.png section headers. Parameters: ?text=...&pigment=RRGGBB&theme=light|dark -->
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=block" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: transparent; }
+  .h { height: 56px; display: flex; align-items: center; gap: 12px; padding-left: 4px; }
+  .dot { width: 22px; height: 22px; flex: none; }
+  .t { position: relative; font: 32px/1 'Permanent Marker', cursive; white-space: nowrap; }
+  .t svg { position: absolute; left: -4px; bottom: -12px; }
+</style>
+</head>
+<body>
+<div class="h">
+  <svg class="dot" viewBox="0 0 22 22"><path id="blob" d="M11 1.5 C17 1 21 5 20.5 11 C20 17 16 21 10.5 20.5 C5 20 1 16 1.5 10.5 C2 5.5 5.5 2 11 1.5 Z"/></svg>
+  <div class="t"><span id="label"></span><svg id="swash" height="14" preserveAspectRatio="none" viewBox="0 0 100 14"><path d="M2 9 L45 5 L98 8" fill="none" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg></div>
+</div>
+<script>
+  const q = new URLSearchParams(location.search)
+  const pigment = '#' + (q.get('pigment') || 'ffc21a')
+  const ink = q.get('theme') === 'dark' ? '#f6f3ec' : '#0e2638'
+  const label = document.getElementById('label')
+  label.textContent = q.get('text') || 'Heading'
+  document.querySelector('.t').style.color = ink
+  document.getElementById('blob').setAttribute('fill', pigment)
+  const sw = document.getElementById('swash')
+  sw.querySelector('path').setAttribute('stroke', pigment)
+  sw.setAttribute('width', label.offsetWidth + 10)
+  document.fonts.ready.then(() => sw.setAttribute('width', label.offsetWidth + 10))
+</script>
+</body>
+</html>
