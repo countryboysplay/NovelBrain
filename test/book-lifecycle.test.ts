@@ -6,7 +6,7 @@ import { parse } from 'yaml'
 import { decide } from '../src/hooks/guard'
 import { newBook } from '../src/main/book/create'
 import { git } from '../src/main/book/git'
-import { archiveBook, createSequel } from '../src/main/book/lifecycle'
+import { archiveBook, createSequel, setSeries } from '../src/main/book/lifecycle'
 import { validateBook } from '../src/main/book/validate'
 
 const kit = resolve('kit/fiction'), hooks = resolve('resources/hooks'), accept = resolve('resources/accept/accept.mjs')
@@ -58,4 +58,28 @@ test('sequel copies the bible only, links predecessor and series, validates, com
   await archiveBook(seq)
   const third = await createSequel(seq, { ...opts, title: 'Greenest' }, kit, hooks, accept)
   expect(yml(third)).toMatchObject({ predecessor: 'greener-still', series: 'the-long-green' })
+})
+
+test('setSeries writes book.yaml, keeps keys and commits; empty clears it', async () => {
+  const dir = await mk()
+  await setSeries(dir, 'wild-hearts')
+  expect(yml(dir)).toMatchObject({ series: 'wild-hearts', title: 'The Long Green', status: 'active' })
+  expect(await git(dir, 'log', '-1', '--format=%s')).toBe('Set series: wild-hearts')
+  await setSeries(dir, null)
+  expect(yml(dir).series).toBeNull()
+  expect(await git(dir, 'log', '-1', '--format=%s')).toBe('Clear series')
+  expect(await git(dir, 'status', '--porcelain')).toBe('')
+})
+
+test('setSeries refuses a bad name, a running book and an archived book', async () => {
+  const dir = await mk()
+  await expect(setSeries(dir, 'Wild Hearts!')).rejects.toThrow(/lowercase words joined by hyphens/)
+  for (const bad of ['..', 'a/b', 'a\b']) await expect(setSeries(dir, bad)).rejects.toThrow(/hyphens/)
+  mkdirSync(join(dir, 'run'), { recursive: true })
+  writeFileSync(join(dir, 'run', 'state.yaml'), 'status: running\n')
+  await expect(setSeries(dir, 'wild')).rejects.toThrow(/run/i)
+  writeFileSync(join(dir, 'run', 'state.yaml'), 'status: idle\n')
+  await archiveBook(dir)
+  await expect(setSeries(dir, 'wild')).rejects.toThrow(/archived/)
+  expect(yml(dir).series).toBeNull()
 })

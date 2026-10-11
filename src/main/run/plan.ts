@@ -10,6 +10,7 @@ export type Step =
   | { kind: 'revise'; id: string; from: string }
   | { kind: 'chapter'; id: string }
   | { kind: 'act'; id: string }
+  | { kind: 'book'; id: 'BOOK' }
   | { kind: 'stop'; reason: 'done' | 'stop-at' | 'needs-you' | 'checkpoint' | 'empty-outline' }
 
 const stop = (reason: Extract<Step, { kind: 'stop' }>['reason']): Step => ({ kind: 'stop', reason })
@@ -18,7 +19,7 @@ const stop = (reason: Extract<Step, { kind: 'stop' }>['reason']): Step => ({ kin
 export function nextStep(input: {
   outline: OutlineT
   sceneStatus: Record<string, SceneStatus>
-  state: Pick<RunStateT, 'stopAt' | 'pauseAtActs' | 'completed' | 'checkedChapters' | 'checkedActs'>
+  state: Pick<RunStateT, 'stopAt' | 'pauseAtActs' | 'completed' | 'checkedChapters' | 'checkedActs' | 'checkedBook'>
   startedWith: { completed: string[]; checkedChapters: string[]; checkedActs: string[] }
   pendingRevisions: { id: string; from: string }[]
 }): Step {
@@ -38,7 +39,8 @@ export function nextStep(input: {
     }
     if (!state.checkedActs.includes(act.id)) { next = { kind: 'act', id: act.id }; break }
   }
-  if (!next) return stop('done')
+  // The book check finishes the last act: it runs before the checkpoint and stop-at rules, so done still wins over checkpoint.
+  if (!next) return state.checkedBook ? stop('done') : { kind: 'book', id: 'BOOK' }
 
   const gained = (now: string[], then: string[]): boolean => now.some((x) => !then.includes(x))
   if (gained(state.checkedActs, startedWith.checkedActs)) {

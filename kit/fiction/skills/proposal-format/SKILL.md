@@ -10,7 +10,7 @@ A proposal is how a scene asks to change canon. Nothing in it is true until the 
 ## File
 - One proposal file per scene: `proposals/P-####.yaml`, four digits, directly in `proposals/` (no subfolders, no other file names; acceptance refuses a stray file there).
 - The `id` inside the file equals the file name without `.yaml`.
-- A new proposal takes the next free number: Glob `proposals/P-*.yaml`, take the highest number, add one (`P-0001` when there is none). Numbers are never reused while their file exists.
+- A proposal's number is its scene's number, four digits at least: SC-012's proposal is `proposals/P-0012.yaml`. Ids never repeat between scenes.
 - If the scene already has a proposal (an earlier round), rewrite that same file in full instead of adding a second one. Find it with Grep for `scene: SC-###` in `proposals/`.
 
 ## Shape
@@ -59,6 +59,11 @@ A knowledge entry may point at a fact this same proposal creates: `NEW-1` is the
 - `supersedes` must name a fact whose status is `established`. A superseded fact cannot be superseded again; retcon the fact that replaced it.
 - The superseded fact is never deleted. Earlier scenes keep what they said; the record shows when and where the truth changed.
 - In a series, an earlier book's canon is history and is never retconned from this book. Name a contradiction with an earlier book in your reply so the writer can decide.
+
+## Correction or later development
+- A correction retcons a fact that was never true (the earlier scene got it wrong, or a reveal shows it was a lie). The new statement replaces it.
+- A later development retcons a fact that was true and has since been overtaken. The new statement keeps the true part and adds the change, so canon still says what was true then: "The transfer was set for 8 a.m.; it was later put on hold." Never retcon a true fact into a statement that erases it.
+- The canon-auditor lists a later development as one retcon item, the same as a correction.
 
 ## What belongs in a proposal
 Only what the prose shows or states as true: names, places, objects, relationships, abilities, injuries, deaths, world rules, secrets revealed, events later scenes could depend on, and who learned which fact. Not the plan's intent, not a character's mistaken belief (that is a knowledge question), not the reader's guesses.

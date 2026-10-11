@@ -18,9 +18,12 @@ test('opens a book, runs Claude inside it with the guard registered, and leaves 
     env: {
       ...base,
       NB_SKIP_SETUP: '1',
+      NB_DISPLAY: process.env.NB_DISPLAY ?? '2',
       NB_USER_DATA: mkdtempSync(join(tmpdir(), 'nb-data-')),
       NB_BOOK: book,
       NB_TEST_PIDS: pids,
+      NB_MEMORY_DIR: mkdtempSync(join(tmpdir(), 'nb-mem-')),
+      NB_CLAUDE_PROJECTS: mkdtempSync(join(tmpdir(), 'nb-projects-')),
       NB_CMD_CLAUDE: join(fixtures, 'fake-claude.cmd'),
       NB_CMD_CODEBURN: stub,
       NB_CMD_HEADROOM: stub
@@ -28,6 +31,7 @@ test('opens a book, runs Claude inside it with the guard registered, and leaves 
   })
   const win = await app.firstWindow()
   await expect(win.getByRole('heading', { name: 'Smoke Book' })).toBeVisible({ timeout: 30_000 })
+  await win.keyboard.press('Control+Backquote') // the studio ships with the terminal folded
   const term = win.locator('.xterm-accessibility')
   await expect(term).toContainText('FAKE CLAUDE READY', { timeout: 30_000 })
   await expect(term).toContainText(`CWD=${book}`)

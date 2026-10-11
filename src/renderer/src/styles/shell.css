@@ -1,0 +1,143 @@
+/* The studio fills the window: top bar, the main row (terminal, rail, wall), status bar. Panes scroll inside; the window never does. */
+.studio { height: 100vh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: var(--wall); color: var(--text); font: 15px/1.45 var(--font-ui); overflow: hidden; accent-color: var(--focus); } /* no scrollbar-color: Chromium would then ignore the ::-webkit-scrollbar rules below */
+.studio > * { min-width: 0; }
+.studio ::selection { background: var(--yellow); color: var(--ink); }
+.studio button, .studio select, .studio input, .studio textarea { font: inherit; }
+.studio button, .studio select { height: auto; }
+.studio button:not(.card-open, .char) { white-space: nowrap; }
+.studio h2, .studio h3, .studio h4 { text-wrap: balance; }
+.studio p { text-wrap: pretty; }
+.skip { position: absolute; left: var(--s2); top: -40px; z-index: var(--z-skip); background: var(--yellow); color: var(--ink); padding: var(--s2) var(--s3); border-radius: 6px; }
+.skip:focus { top: var(--s2); }
+
+.top { display: flex; align-items: center; gap: var(--s2) var(--s5); padding: var(--s3) var(--s5); background: var(--tray); position: relative; z-index: var(--z-bar); flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; font: 800 15px var(--font-display); color: var(--muted); white-space: nowrap; }
+.book { min-width: 0; }
+.book h1 { font: 800 clamp(26px, 1.25vw + 8px, 38px)/1 var(--font-display); letter-spacing: -0.02em; margin: 0; }
+.book p { font-size: 14px; color: var(--muted); margin: var(--s1) 0 0; }
+.sp { flex: 1; }
+/* The right of the top bar reads in one glance: the run (a pill with the live scene's paint wells), today's money, two service tags, then the book actions. */
+.run-pill { display: flex; align-items: center; gap: var(--s3); background: var(--chip); border-radius: 999px; padding: 6px var(--s2) 6px 14px; font-size: 15px; font-weight: 700; white-space: nowrap; min-height: 40px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 45%, transparent), var(--shadow); }
+.run-dot { width: 10px; height: 10px; border-radius: 50% 45% 55% 50%; background: var(--grey); flex: none; }
+.run-running .run-dot { background: var(--ultra); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ultra) 30%, transparent); }
+.run-needs-you .run-dot, .run-error .run-dot { background: var(--red); }
+.run-checkpoint .run-dot, .run-paused .run-dot, .run-usage-limit .run-dot { background: var(--yellow); }
+.run-done .run-dot { background: var(--phthalo); }
+.run-pill .link { color: var(--accent); padding: var(--s1) var(--s2); }
+.top .cost { font-size: 15px; color: var(--muted); margin: 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.top .cost b { font: 800 22px/1 var(--font-display); color: var(--text); letter-spacing: -0.02em; margin-right: 2px; }
+.top .tag { display: inline-flex; align-items: center; gap: var(--s2); margin: 0; min-height: 36px; padding: 6px 14px; border-radius: 999px; background: var(--chip); color: var(--text); font-size: 14px; font-weight: 700; white-space: nowrap; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 45%, transparent); }
+.top .usage { font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 35%, transparent); }
+.top-actions { display: flex; gap: var(--s2); margin-left: var(--s2); }
+.top button, .wall button:not(.char, .card-open, .link) { border: 1px solid var(--line); background: var(--chip); color: var(--text); border-radius: 10px; padding: var(--s2) var(--s4); min-height: 40px; cursor: pointer; font-weight: 700; }
+.wall .paper button:not(.char, .card-open, .link, .go) { background: transparent; color: var(--ink); border-color: var(--field-line); }
+.studio button.go { background: var(--yellow); color: var(--ink); border-color: var(--yellow); box-shadow: 0 6px 14px -4px rgba(0, 0, 0, 0.55); }
+.studio button:disabled, .studio button[aria-disabled='true'] { opacity: 0.55; cursor: not-allowed; }
+.studio button.link { background: none; border: 0; text-decoration: underline; text-underline-offset: 3px; padding: var(--s1); min-height: 0; color: inherit; font-weight: 700; }
+
+.main { display: grid; grid-template-columns: auto 212px minmax(0, 1fr); min-height: 0; }
+.main > * { min-height: 0; }
+.term-strip { display: flex; background: var(--strip); position: relative; }
+.term-strip.open { width: clamp(300px, var(--tw, 640px), 36vw); } /* the writer's width (Settings ui.terminalWidth), never more than a third of the window */
+.term-grip { position: absolute; top: 0; bottom: 0; right: 0; width: 10px; cursor: col-resize; z-index: var(--z-lift); touch-action: none; }
+.term-grip::before { content: ''; position: absolute; inset: 0 0 0 6px; background: var(--line); opacity: 0; }
+.term-grip:hover::before, .term-grip:focus-visible::before { opacity: 1; background: var(--accent); }
+.term-grip:focus-visible { outline-offset: -1px; }
+.term-tab { writing-mode: vertical-rl; white-space: nowrap; letter-spacing: 0.14em; text-transform: uppercase; font-size: 12px; font-weight: 700; width: 40px; flex: none; align-self: stretch; display: flex; align-items: center; background: none; border: 0; color: var(--muted); cursor: pointer; padding: var(--s4) 0; }
+.term-body { flex: 1; position: relative; min-width: 0; }
+.term-body .terminal-area { position: absolute; inset: 0; background: var(--term-bg); }
+.studio .xterm .xterm-viewport { background-color: var(--term-bg); } /* xterm's own sheet is #000 until a theme change; the strip's colour from the start */
+.rail { background: var(--tray); padding: var(--s3) 0 18px; overflow: auto; overscroll-behavior: contain; }
+.rail ul { list-style: none; margin: 0; padding: 0; }
+.rail-title { font: 600 12px var(--font-display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); padding: 14px 22px 6px; margin: 0; }
+.rail button { position: relative; display: flex; align-items: center; gap: var(--s3); width: 100%; min-height: 40px; padding: var(--s2) 22px; color: var(--text); background: none; border: 0; font-size: 15px; text-align: left; cursor: pointer; }
+.rail .dot { width: 12px; height: 12px; border-radius: 50% 45% 55% 50%; background: var(--c); flex: none; }
+.rail b { margin-left: auto; font-weight: 400; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.rail .on { color: var(--ink); font-weight: 700; background: var(--yellow); margin: 2px 10px; width: calc(100% - 20px); padding: var(--s2) var(--s3); border-radius: 5px 16px 7px 13px / 12px 6px 14px 5px; transform: rotate(-0.8deg); }
+.rail .on b { color: var(--ink); }
+.rail .on .dot { background: var(--ink); }
+
+/* The wall: a column so the splat band settles under the content and never lands under text. */
+.wall { position: relative; display: flex; flex-direction: column; padding: var(--s5) clamp(26px, 2vw, 48px) 0; overflow: hidden auto; /* x: paint and tilted cards may overhang the gutter, never scroll it */ overscroll-behavior: contain; outline: none; container-type: inline-size;
+  background: radial-gradient(900px 520px at var(--lx, 62%) var(--ly, 40%), var(--lamp), transparent 70%), radial-gradient(circle at 20% 110%, var(--wall-2) 0, transparent 50%), var(--wall); }
+.studio[data-view='manuscript'] .wall { background: var(--wall); }
+.wall:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+.splats { flex: none; display: flex; justify-content: space-between; align-items: flex-end; height: 96px; margin-top: auto; padding-top: var(--s5); pointer-events: none; }
+.splats svg { height: 72px; width: auto; }
+.splats svg:first-child { transform: scaleX(var(--flip, 1)); }
+.view { position: relative; flex: none; }
+.view > h2, .view .head h2 { font: 800 clamp(48px, 1.5vw + 26px, 64px)/0.95 var(--font-display); letter-spacing: -0.035em; margin: 0 0 var(--s4); }
+.view h3:not(.marker, .paper h3) { font: 700 22px/1.2 var(--font-display); letter-spacing: -0.01em; margin: var(--s6) 0 var(--s3); }
+.paper h3 { font: 700 19px/1.2 var(--font-display); margin: 0 0 var(--s3); }
+
+.foot { display: flex; gap: var(--s2) 22px; align-items: center; flex-wrap: wrap; padding: var(--s2) 22px; background: var(--tray); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.foot > * { white-space: nowrap; }
+.svc { display: inline-flex; align-items: center; gap: 6px; }
+.svc .dot-mark, .top .tag .dot-mark { width: 8px; height: 8px; border-radius: 50%; background: var(--grey); }
+.svc-up .dot-mark { background: var(--phthalo); }
+.svc-starting .dot-mark, .svc-restarting .dot-mark { background: var(--yellow); }
+.svc-failed .dot-mark { background: var(--red); }
+.meter { flex: 0 1 260px; min-width: 80px; height: 8px; }
+.badge { font: 400 15px var(--font-marker); color: var(--act-1); }
+.errors { position: absolute; top: 100%; left: 22px; z-index: var(--z-pop); background: var(--gesso); color: var(--ink); padding: 10px 14px; border-radius: 6px; box-shadow: var(--shadow); max-width: 70ch; }
+.paper { background: var(--gesso); color: var(--ink); color-scheme: light; position: relative; isolation: isolate; }
+/* Paper tooth: a faint noise over every gesso surface, under the text (z -1 inside the paper's own stacking context), so contrast is untouched. */
+.paper:not(table, .status-planned)::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0.08; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.paper .muted, .paper .empty { color: var(--ink-2); }
+
+/* Dialogs: paper on a dimmed wall, a readable measure, labels above their fields. */
+.studio dialog { color-scheme: light; border: 0; border-radius: 8px; box-shadow: var(--shadow-lift); padding: var(--s5) 28px; width: min(720px, calc(100vw - 48px)); max-height: calc(100vh - 48px); overflow: auto; overscroll-behavior: contain; }
+.studio dialog::backdrop { background: rgba(6, 17, 26, 0.6); }
+.studio dialog h2 { font: 800 28px/1.1 var(--font-display); letter-spacing: -0.02em; margin: 0 0 var(--s3); }
+.studio dialog h3 { font: 700 20px/1.2 var(--font-display); margin: var(--s5) 0 var(--s2); }
+.studio dialog form:not([method]) { display: grid; gap: var(--s4); }
+.studio dialog label:has(> input:not([type='checkbox'], [type='radio']), > select) { display: grid; gap: 6px; font-weight: 700; }
+.studio dialog .actions { display: flex; gap: var(--s3); justify-content: flex-end; margin-top: var(--s2); }
+.studio dialog .actions button { border: 1px solid var(--field-line); background: transparent; color: var(--ink); border-radius: 10px; padding: var(--s2) var(--s4); min-height: 40px; font-weight: 700; cursor: pointer; }
+.studio dialog .actions button.go { background: var(--yellow); border-color: var(--yellow); }
+
+/* Fields on paper and on the wall get the studio's own surfaces, never the browser's dark defaults. */
+.paper :is(input:not([type='checkbox'], [type='radio'], [type='range']), select, textarea), .studio dialog :is(input:not([type='checkbox'], [type='radio']), select, textarea) {
+  background: var(--field); color: var(--ink); border: 1px solid var(--field-line); border-radius: 6px; padding: 7px 10px; min-height: 40px; color-scheme: light; }
+.paper option, .studio dialog option { color: var(--ink); background: var(--field); }
+.wall select:not(.chip *, .paper *, dialog *) { background: var(--chip); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; min-height: 40px; }
+/* Scrollbars: a thin rounded thumb in the line colour (3:1 on wall and paper), no buttons. */
+.studio ::-webkit-scrollbar { width: 10px; height: 10px; }
+.studio ::-webkit-scrollbar-track { background: transparent; }
+.studio ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+.studio ::-webkit-scrollbar-thumb:hover { background-color: var(--muted); }
+.studio ::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+.studio .paper::-webkit-scrollbar-thumb, .studio dialog::-webkit-scrollbar-thumb { background-color: var(--field-line); }
+/* Disclosures: the browser's triangle becomes a chevron drawn in the surface's own ink, turning when open. */
+.studio summary { list-style: none; display: inline-flex; align-items: center; gap: 10px; font-weight: 700; cursor: pointer; min-height: 40px; width: fit-content; padding-right: var(--s2); }
+.studio summary::-webkit-details-marker { display: none; }
+.studio summary::before { content: ''; flex: none; width: 9px; height: 9px; border: solid currentColor; border-width: 0 2.5px 2.5px 0; border-radius: 1px; transform: translateX(-2px) rotate(-45deg); }
+.studio details[open] > summary::before { transform: translateY(-2px) rotate(45deg); }
+.studio summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.studio .paper summary:focus-visible { outline-color: var(--focus-paper); }
+.studio .sr-only { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Hover and press feedback for studio buttons: movement only, so text contrast never changes. */
+@media (hover: hover) and (pointer: fine) {
+  .studio button:hover:not(:disabled):not([aria-disabled='true']) { transform: translateY(-1px); }
+}
+.studio button:active:not(:disabled):not([aria-disabled='true']) { transform: scale(0.97); }
+
+/* The minimum window: tighter gutters so the wall keeps its room. */
+@media (max-width: 1100px) {
+  .main { grid-template-columns: auto 196px minmax(0, 1fr); }
+  .top { padding: var(--s2) var(--s4); }
+  .rail-title { padding: var(--s3) var(--s4) var(--s1); }
+  .rail button { padding: var(--s2) var(--s4); }
+  .rail .on { margin-inline: 6px; width: calc(100% - 12px); padding-inline: 10px; }
+  .wall { padding-inline: 20px; }
+  /* One row each: the brand word, the book's subtitle, the service tags and the checkpoint step aside; nothing is clipped. */
+  .top { gap: var(--s2) var(--s4); flex-wrap: nowrap; }
+  .brand span, .book p, .top .headroom, .top .usage:not(.sr-only), .foot .svc, .foot .cp { display: none; }
+  .book h1 { font-size: 24px; }
+  .top button { padding-inline: 10px; }
+  .top-actions { margin-left: 0; }
+  .run-pill { padding-left: 10px; gap: var(--s2); }
+  .run-pill .wide, .run-pill .wells { display: none; } /* a live run keeps to one row: the scene's title, stage and wells are on the Run view */
+  .foot { flex-wrap: nowrap; }
+}

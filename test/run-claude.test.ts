@@ -3,7 +3,7 @@ import { cpSync, existsSync, mkdtempSync, readFileSync, mkdirSync } from 'node:f
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { execFileSync } from 'node:child_process'
-import { runClaude, parseUsageLimit, parseStepResult, UsageLimitError } from '../src/main/run/claude'
+import { runClaude, parseUsageLimit, parseStepResult, UsageLimitError, kitCheck, KitMissingError, HOOK_LINE } from '../src/main/run/claude'
 
 const fake = join(__dirname, 'fixtures', 'fake-claude-headless.cmd')
 const book = () => {
@@ -12,7 +12,7 @@ const book = () => {
   return dir
 }
 const run = (dir: string, prompt: string, extra: object = {}) => runClaude(prompt, { cwd: dir, command: fake, model: 'sonnet', timeoutMs: 30_000, ...extra })
-afterEach(() => { delete process.env.FAKE_SCENARIO; delete process.env.FAKE_PID_FILE; delete process.env.FAKE_LOG; delete process.env.FAKE_COST })
+afterEach(() => { delete process.env.FAKE_SCENARIO; delete process.env.FAKE_PID_FILE; delete process.env.FAKE_LOG; delete process.env.FAKE_COST; delete process.env.FAKE_USAGE })
 
 describe('parseUsageLimit', () => {
   it('recognises the recorded strings and extracts the reset time', () => {
@@ -91,7 +91,7 @@ describe('runClaude', () => {
     const step = parseStepResult(r.result)!
     expect(step).toMatchObject({ step: 'chapter', id: 'CH-01', outcome: 'pass' })
     expect(step.note).toContain('NoDefaultCurrentDirectoryInExePath=1')
-    for (const a of ['-p', '--output-format json', '--model sonnet', '--permission-mode acceptEdits', '--max-turns 7', 'settings.local.json'])
+    for (const a of ['-p', '--output-format stream-json', '--verbose', '--model sonnet', '--permission-mode acceptEdits', '--max-turns 7', 'settings.local.json'])
       expect(step.note).toContain(a)
     expect(existsSync(join(dir, 'reviews/CH-01/flow.md'))).toBe(true)
   })
@@ -122,6 +122,49 @@ describe('runClaude', () => {
     process.env.FAKE_SCENARIO = 'error'
     await expect(run(book(), '/write-scene SC-001')).rejects.toThrow(/boom/)
   })
+  it('omits --settings when null and pins the allowed tools', async () => {
+    const step = parseStepResult((await run(book(), '/check-chapter CH-01', { settings: null, allowedTools: ['Read', 'Write'], env: { NB_DISTILLER: '1' } })).result)!
+    expect(step.note).not.toContain('--settings')
+    expect(step.note).toContain('--allowedTools Read,Write --strict-mcp-config')
+    await expect(run(book(), 'x', { allowedTools: ['Read&calc'] })).rejects.toThrow(/invalid tool/)
+  })
+  it('passes --disallowedTools and validates its names', async () => {
+    const step = parseStepResult((await run(book(), '/check-chapter CH-01', { settings: null, allowedTools: [], disallowedTools: ['Bash', 'WebFetch'] })).result)!
+    expect(step.note).toContain('--disallowedTools Bash,WebFetch')
+    await expect(run(book(), 'x', { disallowedTools: ['Bash(rm *)'] })).rejects.toThrow(/invalid tool/)
+  })
+  it('reports the rate_limit_event of a call and still reads its result and cost', async () => {
+    process.env.FAKE_USAGE = '59'
+    const seen: unknown[] = []
+    const r = await run(book(), '/check-chapter CH-01', { onUsage: (u: unknown) => seen.push(u) })
+    expect(parseStepResult(r.result)).toMatchObject({ step: 'chapter', outcome: 'pass' })
+    expect(r.costUsd).toBe(0.01)
+    expect(seen).toEqual([expect.objectContaining({ source: 'stream', fiveHour: { pct: 59, resetsAt: 4102444800000 }, sevenDay: { pct: 20, resetsAt: 4102444800000 } })])
+  })
+  it('reports usage from a failing call too, and none when the event has no windows', async () => {
+    process.env.FAKE_USAGE = '95'
+    process.env.FAKE_SCENARIO = 'error'
+    const seen: unknown[] = []
+    await expect(run(book(), '/write-scene SC-001', { onUsage: (u: unknown) => seen.push(u) })).rejects.toThrow(/boom/)
+    expect(seen).toHaveLength(1)
+    process.env.FAKE_USAGE = 'missing'
+    process.env.FAKE_SCENARIO = 'ok'
+    const none: unknown[] = []
+    await run(book(), '/check-chapter CH-01', { onUsage: (u: unknown) => none.push(u) })
+    expect(none).toEqual([])
+  })
+  it('a throwing onUsage never fails the step', async () => {
+    process.env.FAKE_USAGE = '59'
+    const r = await run(book(), '/check-chapter CH-01', { onUsage: () => { throw new Error('ui gone') } })
+    expect(parseStepResult(r.result)).toMatchObject({ step: 'chapter', outcome: 'pass' })
+    expect(r.costUsd).toBe(0.01)
+  })
+  it('story text saying "hit your limit" in a failed stream with no result line is not a usage limit', async () => {
+    process.env.FAKE_SCENARIO = 'prose'
+    const e = await run(book(), '/write-scene SC-001').catch(x => x)
+    expect(e).not.toBeInstanceOf(UsageLimitError)
+    expect(e.message).toMatch(/Claude failed \(exit 1\)/)
+  })
   it('times out a hung step and leaves no process behind', async () => {
     const pidFile = join(mkdtempSync(join(tmpdir(), 'nb pid ')), 'pid')
     process.env.FAKE_SCENARIO = 'hang'
@@ -131,4 +174,60 @@ describe('runClaude', () => {
     expect(pid).toBeGreaterThan(0)
     expect(() => process.kill(pid, 0)).toThrow()
   }, 20_000)
+})
+
+describe('runClaude onEvent', () => {
+  it('sees each stream line as it comes; a throwing listener never fails the step', async () => {
+    const seen: unknown[] = []
+    const out = await run(book(), '/write-scene SC-001', { onEvent: (v: unknown) => { seen.push(v); throw new Error('listener broke') } })
+    expect(out.result).toMatch(/"outcome"/)
+    expect(seen.some(v => (v as { type?: string }).type === 'assistant')).toBe(true)
+    expect(seen.at(-1)).toMatchObject({ type: 'result' })
+  })
+})
+
+describe('kitCheck', () => {
+  const hook = (stdout: string, outcome = 'success') => ({ type: 'system', subtype: 'hook_response', hook_event: 'SessionStart', outcome, stdout })
+  const init = (o: object = {}) => ({ type: 'system', subtype: 'init', agents: ['author', 'Explore'], slash_commands: ['write-scene', 'ponytail'], claude_code_version: '2.1.296', ...o })
+  const feed = (...events: unknown[]) => { const c = kitCheck(); let r = null; for (const e of events) r = c(e) ?? r; return r }
+  it('passes with the book hook line and the kit', () => expect(feed(hook(`${HOOK_LINE}\nbrief`), init())).toEqual({ ok: true, version: '2.1.296' }))
+  it('waits until init', () => expect(feed(hook(HOOK_LINE))).toBeNull())
+  it('fails without the hook line, with a failed hook, or with another hook only', () => {
+    expect(feed(init())?.ok).toBe(false)
+    expect(feed(hook(HOOK_LINE, 'error'), init())?.ok).toBe(false)
+    expect(feed(hook('PONYTAIL MODE ACTIVE'), init())?.ok).toBe(false)
+  })
+  it('fails without the author agent or the write-scene command', () => {
+    expect(feed(hook(HOOK_LINE), init({ agents: ['Explore'] }))?.ok).toBe(false)
+    expect(feed(hook(HOOK_LINE), init({ slash_commands: [] }))?.ok).toBe(false)
+    expect(feed(hook(HOOK_LINE), init({ agents: 'author' }))?.ok).toBe(false)
+  })
+  it('ignores junk lines', () => expect(feed(null, 'x', 42, { type: 'assistant' }, hook(HOOK_LINE), init())?.ok).toBe(true))
+})
+
+describe('runClaude with requireKit', () => {
+  it('passes a step whose stream shows the hooks and kit, and reports the version', async () => {
+    let version = ''
+    const r = await run(book(), '/write-scene SC-001', { requireKit: true, onVersion: (v: string) => (version = v) })
+    expect(r.result).toContain('SC-001')
+    expect(version).toBe('9.9.9-fake')
+  })
+  it('kills a step that started without the hooks, before it can write', async () => {
+    process.env.FAKE_SCENARIO = 'nokit'
+    const dir = book()
+    const err = await run(dir, '/write-scene SC-001', { requireKit: true }).catch(e => e)
+    expect(err).toBeInstanceOf(KitMissingError)
+    expect(err.message).toMatch(/Claude Code 9\.9\.9-fake started without the book's hooks or kit/)
+    expect(existsSync(join(dir, 'drafts', 'NOKIT.md'))).toBe(false)
+  })
+  it('without requireKit, the same stream is not checked', async () => {
+    process.env.FAKE_SCENARIO = 'nokit'
+    await expect(run(book(), '/write-scene SC-001')).resolves.toBeTruthy()
+  })
+  it('a stream that ends before init fails as a CLI failure, not a kit stop', async () => {
+    process.env.FAKE_SCENARIO = 'nonzero'
+    const err = await run(book(), 'x', { requireKit: true }).catch(e => e)
+    expect(err).not.toBeInstanceOf(KitMissingError)
+    expect(err.message).toMatch(/Claude failed \(exit 3\)/)
+  })
 })

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { isAllowedUrl } from '../src/main/security'
+import { allowAttach, isAllowedUrl } from '../src/main/security'
 
 const project = 'C:\\Users\\me\\My Project'
 const inGraph = (...p: string[]) => pathToFileURL(join(project, 'graphify-out', ...p)).href
@@ -32,4 +32,14 @@ describe('isAllowedUrl', () => {
   ])('blocks %s', url => expect(isAllowedUrl(url, project)).toBe(false))
 
   it('blocks file URLs when no project is open', () => expect(isAllowedUrl(inGraph('graph.html'), null)).toBe(false))
+})
+
+describe('allowAttach', () => {
+  it('allows only the codeburn partition at an allowed URL', () => {
+    expect(allowAttach({ src: 'http://localhost:4747', partition: 'codeburn' }, project)).toBe(true)
+    expect(allowAttach({ src: 'http://localhost:4747' }, project)).toBe(false) // no partition: the app's default session
+    expect(allowAttach({ src: 'http://localhost:4747', partition: '' }, project)).toBe(false)
+    expect(allowAttach({ src: 'http://localhost:4747', partition: 'persist:codeburn' }, project)).toBe(false)
+    expect(allowAttach({ src: 'http://example.com', partition: 'codeburn' }, project)).toBe(false)
+  })
 })

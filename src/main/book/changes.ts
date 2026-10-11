@@ -1,4 +1,4 @@
-import { existsSync, lstatSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs'
+import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { createHash, randomUUID } from 'node:crypto'
 import { parseDocument, stringify } from 'yaml'
@@ -234,4 +234,35 @@ export async function rejectChange(bookDir: string, id: string, opts: Opts = {})
   })
   if (!r.ok) throw new Error(r.reasons.join('; '))
   return r.commit
+}
+
+/** One past the highest change id used anywhere: pending, applied or rejected. */
+export function nextChangeId(bookDir: string): string {
+  let max = 0
+  for (const d of ['notes/changes', 'notes/changes/applied', 'notes/changes/rejected']) {
+    let names: string[] = []
+    try { names = readdirSync(join(bookDir, d)) } catch { /* none yet */ }
+    for (const n of names) { const m = /^CHG-(\d{4,})\.yaml$/.exec(n); if (m) max = Math.max(max, Number(m[1])) }
+  }
+  return `CHG-${String(max + 1).padStart(4, '0')}`
+}
+
+/** The writer's edit of an accepted scene, saved as a pending author change; only preview and approve apply it. */
+export function proposeEdit(bookDir: string, scene: string, text: string): string {
+  if (!/^SC-\d{3,}$/.test(scene)) throw new Error('Invalid scene id')
+  let book
+  try { book = Book.safeParse(readYaml(join(bookDir, 'book.yaml'))) } catch { book = null }
+  if (!book?.success || book.data.status !== 'active') throw new Error('Only an active book can be edited')
+  const rel = `manuscript/${scene}.md`
+  const linked = linkedFolders(bookDir, [rel, 'notes/changes/new.yaml'])
+  if (linked.length) throw new Error(linked.join('; '))
+  if (!existsSync(join(bookDir, rel))) throw new Error(`${scene} has no manuscript yet`)
+  const lf = (s: string) => s.replace(/^﻿/, '').replace(/\r\n/g, '\n') // as the studio reads it
+  if (lf(readFileSync(join(bookDir, rel), 'utf8')) === lf(text)) throw new Error('Nothing changed')
+  const id = nextChangeId(bookDir)
+  const change = ChangeRequest.parse({ id, summary: `Writer's edit of ${scene}`, manuscript: [{ scene, text }] })
+  mkdirSync(join(bookDir, 'notes/changes'), { recursive: true })
+  try { writeFileSync(join(bookDir, pending(id)), stringify(change), { flag: 'wx' }) } // never overwrites a change Claude wrote meanwhile
+  catch (e) { throw (e as NodeJS.ErrnoException).code === 'EEXIST' ? new Error('Another change took that id; try again') : e }
+  return id
 }

@@ -16,7 +16,7 @@ const accepted = (n: number) => Object.fromEntries(all.slice(0, n).map((s) => [s
 const none = { completed: [] as string[], checkedChapters: [] as string[], checkedActs: [] as string[] }
 const mk = (o: any = {}) => ({
   outline, sceneStatus: {}, pendingRevisions: [], startedWith: none,
-  state: { stopAt: 'book', pauseAtActs: true, completed: [], checkedChapters: [], checkedActs: [], ...(o.state ?? {}) },
+  state: { stopAt: 'book', pauseAtActs: true, completed: [], checkedChapters: [], checkedActs: [], checkedBook: false, ...(o.state ?? {}) },
   ...Object.fromEntries(Object.entries(o).filter(([k]) => k !== 'state'))
 }) as any
 
@@ -79,11 +79,11 @@ test('stop-at chapter keeps going before a chapter check', () => {
   expect(nextStep(mk({ sceneStatus: accepted(1), state }))).toEqual({ kind: 'scene', id: 'SC-002' })
 })
 test('done when everything is accepted and checked', () => {
-  const state = { checkedChapters: ['CH-01', 'CH-02', 'CH-03', 'CH-04'], checkedActs: ['ACT-1', 'ACT-2'] }
+  const state = { checkedChapters: ['CH-01', 'CH-02', 'CH-03', 'CH-04'], checkedActs: ['ACT-1', 'ACT-2'], checkedBook: true }
   expect(nextStep(mk({ sceneStatus: accepted(8), state }))).toEqual({ kind: 'stop', reason: 'done' })
 })
 test('done wins over checkpoint when the last act was just checked', () => {
-  const state = { checkedChapters: ['CH-01', 'CH-02', 'CH-03', 'CH-04'], checkedActs: ['ACT-1', 'ACT-2'] }
+  const state = { checkedChapters: ['CH-01', 'CH-02', 'CH-03', 'CH-04'], checkedActs: ['ACT-1', 'ACT-2'], checkedBook: true }
   const startedWith = { ...none, checkedActs: ['ACT-1'] }
   expect(nextStep(mk({ sceneStatus: accepted(8), state, startedWith }))).toEqual({ kind: 'stop', reason: 'done' })
 })
@@ -94,4 +94,18 @@ test('without act pauses, a just-checked act runs on to the next scene', () => {
 test('without act pauses, stop-at act still stops after a new act check', () => {
   const state = { stopAt: 'act', pauseAtActs: false, checkedChapters: ['CH-01', 'CH-02'], checkedActs: ['ACT-1'] }
   expect(nextStep(mk({ sceneStatus: accepted(4), state }))).toEqual({ kind: 'stop', reason: 'stop-at' })
+})
+test('after the last act check the book check runs, before any checkpoint or stop-at', () => {
+  const state = { checkedChapters: ['CH-01', 'CH-02', 'CH-03', 'CH-04'], checkedActs: ['ACT-1', 'ACT-2'] }
+  expect(nextStep(mk({ sceneStatus: accepted(8), state }))).toEqual({ kind: 'book', id: 'BOOK' })
+  expect(nextStep(mk({ sceneStatus: accepted(8), state: { ...state, stopAt: 'act' } }))).toEqual({ kind: 'book', id: 'BOOK' })
+})
+test('done after the book check', () => {
+  const state = { checkedChapters: ['CH-01', 'CH-02', 'CH-03', 'CH-04'], checkedActs: ['ACT-1', 'ACT-2'], checkedBook: true }
+  expect(nextStep(mk({ sceneStatus: accepted(8), state }))).toEqual({ kind: 'stop', reason: 'done' })
+})
+test('an unchecked act comes before the book check', () => {
+  const state = { checkedChapters: ['CH-01', 'CH-02', 'CH-03', 'CH-04'], checkedActs: ['ACT-1'] }
+  const startedWith = { ...none, checkedActs: ['ACT-1'] } // ACT-1 was checked in an earlier run, so no checkpoint
+  expect(nextStep(mk({ sceneStatus: accepted(8), state, startedWith }))).toEqual({ kind: 'act', id: 'ACT-2' })
 })

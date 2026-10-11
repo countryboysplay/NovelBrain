@@ -10,7 +10,7 @@ Layers on top of the audience profile. Where this skill and the audience profile
 ## Reader promise
 - ROM-PROM-01: Every romance has two basic elements, a central love story and an emotionally satisfying and optimistic ending. [S1][S2]
 - ROM-PROM-02: The love story must be the main focus. A romantic thread that is not central makes the book something other than genre romance, and a tragic ending disqualifies it. [S2]
-- ROM-PROM-03: Plan a clear happily-ever-after (HEA). Social media discussion suggests readers hold to a conventional HEA more firmly than the official wording requires. A softer happy-for-now (HFN) ending is allowed only if the story notes say so (house setting; no source read defines HFN). [S1]
+- ROM-PROM-03: Plan a clear happily-ever-after (HEA). Social media discussion suggests readers hold to a conventional HEA more firmly than the official wording requires. A softer happy-for-now (HFN) ending is allowed only if the Ending section of `bible/world/brief.md` says so (house setting; no source read defines HFN). [S1]
 - ROM-PROM-04: The difference between a romance and a romantic subplot is the ending: the love story is resolved in a happy ending, an HEA or, where ROM-PROM-03 allows it, an HFN. A story that leaves the couple apart or in doubt is not a romance. [S5]
 - ROM-PROM-05: The couple's emotional issues should be the driving force of the tension between them, and the books are meant to be emotionally intense. [S3]
 

@@ -1,7 +1,8 @@
 import { cpSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { parse, stringify } from 'yaml'
-import { Book } from '../../shared/schemas'
+import { Book, SLUG } from '../../shared/schemas'
+import { ExportSettings } from '../../shared/export'
 import { newBook, NewBookOpts } from './create'
 import { ensureIdentity, git } from './git'
 
@@ -31,6 +32,27 @@ export async function archiveBook(bookDir: string): Promise<string> {
   const meta = readBook(bookDir)
   writeBook(bookDir, { ...meta, status: 'archived' })
   return commitPaths(bookDir, `Archive ${meta.title}`, ['book.yaml'])
+}
+
+export async function setSeries(bookDir: string, series: string | null): Promise<string> {
+  if (series !== null && !SLUG.test(series)) throw new Error('A series name is lowercase words joined by hyphens, like wild-hearts.')
+  if (runIsRunning(bookDir)) throw new Error('A run is in progress. Stop it before changing the series.')
+  const meta = readBook(bookDir)
+  if (meta.status !== 'active') throw new Error('This book is archived, so its series cannot change.')
+  if ((meta.series ?? null) === series) return git(bookDir, 'rev-parse', '--short', 'HEAD')
+  writeBook(bookDir, { ...meta, series })
+  return commitPaths(bookDir, series ? `Set series: ${series}` : 'Clear series', ['book.yaml'])
+}
+
+export async function setExportSettings(bookDir: string, settings: unknown): Promise<string> {
+  const p = ExportSettings.safeParse(settings)
+  if (!p.success) throw new Error(p.error.issues.map(i => `${i.path.join('.') || 'settings'}: ${i.message}`).join('; '))
+  if (runIsRunning(bookDir)) throw new Error('A run is in progress. Stop it before changing the publish settings.')
+  const meta = readBook(bookDir)
+  if (meta.status !== 'active') throw new Error('This book is archived, so its publish settings cannot change.')
+  if (JSON.stringify(meta.export ?? null) === JSON.stringify(p.data)) return git(bookDir, 'rev-parse', '--short', 'HEAD')
+  writeBook(bookDir, { ...meta, export: p.data })
+  return commitPaths(bookDir, 'Publish settings', ['book.yaml'])
 }
 
 export async function createSequel(predecessorDir: string, opts: NewBookOpts, kitDir: string, hooksDir: string, acceptBundle: string): Promise<string> {

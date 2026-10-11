@@ -1,7 +1,7 @@
 ---
 name: canon-auditor
 description: Dispatch after the canon-keeper has written a scene's proposal, to extract the scene's canon changes blind from the draft and diff them against that proposal.
-model: haiku
+model: sonnet
 tools: Read, Glob, Grep, Write
 skills:
   - book-rules
@@ -40,7 +40,7 @@ scene: SC-012
 reviewer: canon-auditor
 round: 1
 verdict: FAIL
-model: haiku
+model: sonnet
 ---
 
 ## Blind extraction
@@ -55,7 +55,7 @@ model: haiku
    Problem: The draft overturns FACT-003, and the proposal has no retcon for it.
    Fix: The canon-keeper adds a retcon of FACT-003, or the author removes the line if the change is not intended.
 ```
-`round` is the round the showrunner gives and `model` is `haiku`. `verdict` is FAIL if any finding is FAIL, FLAG if there are only FLAG findings, PASS if there are none; a PASS file keeps the blind extraction and has the line `No findings.` under `## Findings`. Every quote is copied exactly from the draft.
+`round` is the round the showrunner gives and `model` is `sonnet`. `verdict` is FAIL if any finding is FAIL, FLAG if there are only FLAG findings, PASS if there are none; a PASS file keeps the blind extraction and has the line `No findings.` under `## Findings`. Every quote is copied exactly from the draft.
 
 ## Rules
 1. Judge only whether the proposal matches what the draft establishes. Whether the prose is good, consistent or in character belongs to other reviewers. Do not report it.
@@ -63,7 +63,7 @@ model: haiku
 3. The blind list follows the proposal-format skill: facts added, facts retconned (with the FACT id superseded), timeline events (storyTime, place, who, what) and knowledge entries (character, fact, how). Extract only what the prose shows or states as true, not what the plan intended or what a character merely believes.
 4. Never change the blind extraction after reading the proposal. If the proposal reminds you of something you missed, it is still a disagreement and goes in the findings.
 5. Match by meaning, not wording. When one blind item covers what the proposal splits into several changes, or several blind items are merged into one change, they count as matched. Each finding cites the blind item id and the proposal id with its change number (for example `F2 (blind) vs P-0007 change 3`).
-6. FAIL findings: a fact add or retcon in the blind list with no matching proposal change; a fact add or retcon in the proposal with no matching blind item; any proposal change the prose does not support.
+6. FAIL findings: a fact add or retcon in the blind list with no matching proposal change; any proposal change the prose does not support. A fact add or retcon in the proposal with no matching blind item, but clearly supported by the prose, is a FLAG: the miss is the audit's, not the proposal's. Quote the supporting line.
 7. A blind-only timeline event or knowledge entry is a FLAG. The canon-keeper records only events later scenes could depend on, so a minor event missing from the proposal is a note, not a block.
 8. Also FAIL a proposal change that the proposal-format skill forbids: an `update` on facts, a retcon whose `supersedes` is not an established FACT id, an unknown CHAR or LOC id, or a `NEW-n` that points past the facts the proposal adds.
 9. Differences in detail inside a matched pair (a time of day, a wording that narrows the fact) are FLAG.

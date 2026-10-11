@@ -1,4 +1,4 @@
-import { closeSync, copyFileSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, writeSync } from 'node:fs'
+import { appendFileSync, closeSync, copyFileSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, writeSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { stringify } from 'yaml'
 import type { z } from 'zod'
@@ -8,7 +8,7 @@ export type RunStateT = z.infer<typeof RunState>
 
 const file = (bookDir: string) => join(bookDir, 'run', 'state.yaml')
 const defaults = (): RunStateT => ({ status: 'idle', stopAt: 'act', pauseAtActs: true, spentUsd: 0, current: null, completed: [], parked: [],
-  checkedChapters: [], checkedActs: [], resumeAfter: null, lastError: null })
+  checkedChapters: [], checkedActs: [], checkedBook: false, resumeAfter: null, lastError: null })
 
 /** Books with a Runner loop in this process; only for them is status 'running' true. */
 export const liveRuns = new Set<string>()
@@ -50,4 +50,26 @@ export function writeRunState(bookDir: string, s: RunStateT): void {
     closeSync(fd)
   }
   renameSync(tmp, file(bookDir))
+}
+
+export interface SpendEntry { at: string; kind: 'scene' | 'revise' | 'chapter' | 'act' | 'book'; id: string; usd: number }
+const KINDS: readonly SpendEntry['kind'][] = ['scene', 'revise', 'chapter', 'act', 'book']
+const spendFile = (bookDir: string) => join(bookDir, 'run', 'spend.jsonl')
+
+// One line per paid step, for the Cost view only: nothing decides anything from it.
+export function appendSpend(bookDir: string, e: SpendEntry): void {
+  mkdirSync(join(bookDir, 'run'), { recursive: true })
+  appendFileSync(spendFile(bookDir), `${JSON.stringify(e)}\n`)
+}
+
+export function readSpend(bookDir: string): SpendEntry[] {
+  let text: string
+  try { text = readFileSync(spendFile(bookDir), 'utf8') } catch { return [] }
+  return text.split('\n').flatMap(line => {
+    try {
+      const e = JSON.parse(line)
+      return typeof e?.at === 'string' && KINDS.includes(e.kind) && typeof e.id === 'string' && Number.isFinite(e.usd) && e.usd >= 0
+        ? [{ at: e.at, kind: e.kind, id: e.id, usd: e.usd }] : []
+    } catch { return [] }
+  })
 }

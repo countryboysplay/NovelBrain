@@ -43,7 +43,7 @@ Layers on top of the audience profile. Where this skill and the audience profile
 
 ## Reader psychology
 Builds on the reader-engagement skill.
-- MYS-ENG-01: Every clue the solution depends on is stated on the page, in a scene before the reveal, even if disguised among other detail. Keep a clue ledger in the notes listing each clue and the scene where it appears. [S1][S2]
+- MYS-ENG-01: Every clue the solution depends on is stated on the page, in a scene before the reveal, even if disguised among other detail. Keep a clue ledger in the Story notes section of `bible/world/brief.md`, listing each clue and the scene where it appears. [S1][S2]
   Check: for each clue named in the solution, quote the sentence in an earlier scene that shows it.
 - MYS-ENG-02: When the POV character notices something significant, the text says what it is in that scene. No line says the character saw or understood something without telling the reader what it was. [S1]
   Check: search for phrases such as "couldn't believe what" or "it all made sense" and confirm the cause is stated in the same scene.

@@ -10,7 +10,7 @@ The manuscript is prose. Canon is truth. The outline is intent. Memory is eviden
 
 ## The folders
 - `book.yaml`: the book's title, audience, genres, word target, series and predecessor, and whether it is active or archived. Read it; never write it.
-- `bible/`: the design. `characters/CHAR-*.md` (name, role, voice, arc beats, then a description), `places/LOC-*.md`, and `world/*.md` (world rules, themes, `style.md` for the style guide, `structure.md` for the structural framework). Intent, freely revised by the story architect.
+- `bible/`: the design. `characters/CHAR-*.md` (name, role, voice, arc beats, then a description), `places/LOC-*.md`, and `world/*.md` (world rules, themes, `style.md` the voice sheet, `brief.md` for the blurb, promise, shelf, comps, ending and genre notes, `structure.md` for the structural framework). Intent, freely revised by the story architect.
 - `outline/`: intent. `outline.yaml` orders acts, chapters and scenes; `scenes/SC-###.yaml` is each scene's plan, with its status: `planned`, `drafting`, `review`, `accepted` or `needs-you`.
 - `canon/`: truth. `facts.yaml` (facts with status `established` or `superseded`), `timeline.yaml` (events in story time) and `knowledge.yaml` (which character knows which fact, and how). Written only by Novel Brain's acceptance step.
 - `manuscript/SC-###.md`: accepted prose, exactly as the reader will see it. Written only by acceptance.
@@ -58,3 +58,9 @@ canon:
 outline:
   - { scene: SC-012, status: planned }
 ```
+
+## Lessons
+`bible/world/lessons.md` holds this book's craft lessons: short, numbered, one line each ("Close every scene on its outcome."). It is spoiler-free: never a story fact, a culprit, a plant or a twist; story facts live in canon and the bible. The showrunner writes it; the story-architect, author and line editor read it before they work. Memory's lessons (`.novelbrain/memory.md`) are the writer's across books; this file is this book's.
+
+## No spoilers in replies
+The writer reads replies, step notes and the writers' room. Never name the solution, a character's hidden role or what a planted clue means in a reply or a note; say what happened in story terms ("Tiffany finds the second jacket") or craft terms ("the clue in beat 3 is too plain"). Files keep the full truth; only replies hold back.

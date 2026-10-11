@@ -159,3 +159,16 @@ test('blocks CLAUDE.md, CLAUDE.local.md, .gitattributes and .mcp.json, whatever 
     expect(write(b, p).allow, p).toBe(false)
   expect(write(b, 'notes/claude-notes.md')).toEqual({ allow: true })
 })
+
+test('the shell allows exactly the two touch-up forms of accept', () => {
+  const b = mkBook()
+  for (const c of ['node .novelbrain/accept.mjs SC-012 --touchup', 'node .novelbrain/accept.mjs SC-012 --sealed'])
+    expect(bash(b, c).allow, c).toBe(true)
+  for (const c of ['node .novelbrain/accept.mjs SC-012 --force', 'node .novelbrain/accept.mjs SC-012 --touchup --sealed', 'node .novelbrain/accept.mjs --touchup SC-012', 'node .novelbrain/accept.mjs SC-012  --touchup', 'node .novelbrain/accept.mjs SC-012 --sealed; rm x', 'node .novelbrain/accept.mjs SC-012 --touchup && rm x', 'node .novelbrain/accept.mjs SC-012 --touchup\nrm x'])
+    expect(bash(b, c).allow, c).toBe(false)
+  // The PowerShell tool gets the same exact forms, and a carriage return cannot smuggle a second command in.
+  for (const [c, ok] of [['node .novelbrain/accept.mjs SC-012 --touchup', true], ['node .novelbrain/accept.mjs SC-012 --sealed', true], ['node .novelbrain/accept.mjs SC-012 --sealed; Remove-Item x', false]] as const)
+    expect(decide({ cwd: b, tool_name: 'PowerShell', tool_input: { command: c } }).allow, c).toBe(ok)
+  for (const c of ['node .novelbrain/accept.mjs SC-012 --touchup\rrm x', 'node .novelbrain/accept.mjs SC-012 --sealed\r\nrm x', 'node .novelbrain/accept.mjs SC-012\r --touchup'])
+    for (const tool_name of ['Bash', 'PowerShell']) expect(decide({ cwd: b, tool_name, tool_input: { command: c } }).allow, JSON.stringify(c)).toBe(false)
+})

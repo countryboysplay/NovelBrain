@@ -7371,8 +7371,8 @@ var require_dist = __commonJS({
 
 // src/accept/accept.ts
 var import_yaml2 = __toESM(require_dist());
-import { closeSync, existsSync as existsSync2, fsyncSync, lstatSync, mkdirSync, openSync, readFileSync as readFileSync2, readdirSync as readdirSync2, renameSync, rmSync, statSync as statSync2, utimesSync, writeFileSync, writeSync } from "node:fs";
-import { dirname, join as join2 } from "node:path";
+import { closeSync, existsSync as existsSync3, fsyncSync, lstatSync, mkdirSync, openSync, readFileSync as readFileSync3, readdirSync as readdirSync2, renameSync, rmSync, statSync as statSync2, utimesSync, writeFileSync, writeSync } from "node:fs";
+import { dirname, join as join3 } from "node:path";
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 
@@ -12410,7 +12410,7 @@ function isRecursive(inst, stack, resolve) {
     return PROVEN;
   stack.add(inst);
   let result = NONE;
-  const check2 = (child) => {
+  const check3 = (child) => {
     if (result !== PROVEN && child?._zod) {
       const answer = isRecursive(child, stack, resolve);
       if (answer > result)
@@ -12439,32 +12439,32 @@ function isRecursive(inst, stack, resolve) {
     case "object": {
       const raw = rawShape(def);
       merge2(raw ? shape(raw, true) : ASSUMED);
-      check2(def.catchall);
+      check3(def.catchall);
       break;
     }
     case "array":
-      check2(def.element);
+      check3(def.element);
       break;
     case "tuple":
       for (const el of def.items)
-        check2(el);
-      check2(def.rest);
+        check3(el);
+      check3(def.rest);
       break;
     case "record":
     case "map":
-      check2(def.keyType);
-      check2(def.valueType);
+      check3(def.keyType);
+      check3(def.valueType);
       break;
     case "set":
-      check2(def.valueType);
+      check3(def.valueType);
       break;
     case "union":
       for (const el of def.options)
-        check2(el);
+        check3(el);
       break;
     case "intersection":
-      check2(def.left);
-      check2(def.right);
+      check3(def.left);
+      check3(def.right);
       break;
     case "optional":
     case "nullable":
@@ -12475,15 +12475,15 @@ function isRecursive(inst, stack, resolve) {
     case "nonoptional":
     case "promise":
     case "success":
-      check2(def.innerType);
+      check3(def.innerType);
       break;
     case "pipe":
-      check2(def.in);
-      check2(def.out);
+      check3(def.in);
+      check3(def.out);
       break;
     case "function":
-      check2(def.input);
-      check2(def.output);
+      check3(def.input);
+      check3(def.output);
       break;
     // `$ZodLazy` caches its inner on the def, so a resolved edge is followed exactly
     case "lazy": {
@@ -12524,10 +12524,10 @@ function isRecursive(inst, stack, resolve) {
         if (!value || typeof value !== "object")
           continue;
         if (value._zod)
-          check2(value);
+          check3(value);
         else if (Array.isArray(value))
           for (const el of value)
-            check2(el);
+            check3(el);
       }
     }
   }
@@ -20473,8 +20473,8 @@ function generateChecks(doc, ctx, schema, accessor) {
   if (!schemaChecks || schemaChecks.length === 0)
     return accessor;
   let currentAccessor = accessor;
-  for (const check2 of schemaChecks) {
-    const def = check2._zod.def;
+  for (const check3 of schemaChecks) {
+    const def = check3._zod.def;
     if (def.when && !WHEN_DEFAULTED_CHECKS.has(def.check)) {
       throw new ZodCompileUnsupportedError(`check with a custom "when" condition`);
     }
@@ -20522,7 +20522,7 @@ function generateChecks(doc, ctx, schema, accessor) {
         currentAccessor = generateStringFormatCheck(doc, ctx, def, currentAccessor);
         break;
       case "custom":
-        currentAccessor = generateCustomRefineCheck(doc, ctx, check2, currentAccessor);
+        currentAccessor = generateCustomRefineCheck(doc, ctx, check3, currentAccessor);
         break;
       case "bigint_format":
         generateBigIntFormatCheck(doc, def, currentAccessor);
@@ -20538,7 +20538,7 @@ function generateChecks(doc, ctx, schema, accessor) {
         break;
       case "overwrite": {
         const newAccessor = newVar(ctx);
-        generateOverwriteCheck(doc, ctx, check2, currentAccessor, newAccessor);
+        generateOverwriteCheck(doc, ctx, check3, currentAccessor, newAccessor);
         currentAccessor = newAccessor;
         break;
       }
@@ -20661,8 +20661,8 @@ function generatePropertyCheck(doc, ctx, def, accessor) {
   const propAccessor = `${accessor}[${JSON.stringify(def.property)}]`;
   generateCheck(doc, ctx, def.schema, propAccessor);
 }
-function generateOverwriteCheck(doc, ctx, check2, currentAccessor, newAccessor) {
-  const tx = check2._zod.def.tx;
+function generateOverwriteCheck(doc, ctx, check3, currentAccessor, newAccessor) {
+  const tx = check3._zod.def.tx;
   if (!tx) {
     throw new ZodCompileUnsupportedError("overwrite check without a transform function");
   }
@@ -20678,8 +20678,8 @@ function throwAsync() {
 function pushIssue(issue2) {
   this.issues.push(issue2);
 }
-function generateCustomRefineCheck(doc, ctx, check2, accessor) {
-  const def = check2._zod.def;
+function generateCustomRefineCheck(doc, ctx, check3, accessor) {
+  const def = check3._zod.def;
   if (def.fn) {
     if (isAsyncFunction(def.fn)) {
       throw new ZodCompileAsyncError("z.compile: async .refine() predicates are not supported");
@@ -20692,11 +20692,11 @@ function generateCustomRefineCheck(doc, ctx, check2, accessor) {
     doc.write(`if (!${resVar}) return INVALID;`);
     return accessor;
   }
-  if (check2._zod.check) {
-    if (isAsyncFunction(check2._zod.check)) {
+  if (check3._zod.check) {
+    if (isAsyncFunction(check3._zod.check)) {
       throw new ZodCompileAsyncError("z.compile: async .superRefine() / check functions are not supported");
     }
-    const checkFn = check2._zod.check;
+    const checkFn = check3._zod.check;
     const helperFn = (value) => {
       const fakePayload = { value, issues: [], addIssue: pushIssue };
       const result = checkFn(fakePayload);
@@ -24611,8 +24611,8 @@ var ZodType = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
     reg.add(this, meta3);
     return this;
   },
-  refine(check2, params) {
-    return this.check(refine(check2, params));
+  refine(check3, params) {
+    return this.check(refine(check3, params));
   },
   superRefine(refinement, params) {
     return this.check(superRefine(refinement, params));
@@ -27059,17 +27059,18 @@ var ID = {
 };
 var AUDIENCES = ["early-chapter", "middle-grade", "young-adult", "new-adult", "adult"];
 var GENRES = ["literary", "mystery", "thriller", "romance", "fantasy", "science-fiction", "horror", "historical"];
-var REVIEWERS = ["continuity", "character", "developmental", "line", "audience", "canon-auditor", "gate", "arc", "flow"];
-var REQUIRED_REVIEWERS = ["continuity", "character", "developmental", "line", "audience", "canon-auditor", "gate"];
+var REVIEWERS = ["continuity", "character", "developmental", "line", "audience", "reader", "canon-auditor", "gate", "arc", "flow"];
+var REQUIRED_REVIEWERS = ["continuity", "character", "developmental", "line", "audience", "reader", "canon-auditor", "gate"];
+var SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 var id = (re, what) => external_exports.string().regex(re, `not a valid ${what} id`);
 var text = external_exports.string().min(1);
 var Book = external_exports.object({
-  id: external_exports.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "book id must be lowercase words joined by hyphens"),
+  id: external_exports.string().regex(SLUG, "book id must be lowercase words joined by hyphens"),
   title: text,
   status: external_exports.enum(["active", "archived"]),
   audience: external_exports.enum(AUDIENCES),
   genres: external_exports.array(external_exports.enum(GENRES)).min(1),
-  series: external_exports.string().nullable(),
+  series: external_exports.string().regex(SLUG, "series must be lowercase words joined by hyphens").nullable(),
   predecessor: external_exports.string().nullable(),
   wordTarget: external_exports.number().int().positive(),
   kitVersion: text,
@@ -27151,12 +27152,12 @@ var ChangeRequest = external_exports.object({
   outline: external_exports.array(external_exports.object({ scene: id(ID.scene, "scene"), status: external_exports.literal("planned") })).optional()
 }).refine((c) => !!(c.canon?.length || c.manuscript?.length || c.outline?.length), "needs at least one canon, manuscript or outline change");
 var Series = external_exports.object({
-  id: external_exports.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
+  id: external_exports.string().regex(SLUG),
   title: text,
-  books: external_exports.array(external_exports.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/))
+  books: external_exports.array(external_exports.string().regex(SLUG))
 });
 var Review = external_exports.object({
-  scene: external_exports.union([id(ID.scene, "scene"), id(ID.chapter, "chapter"), id(ID.act, "act")]),
+  scene: external_exports.union([id(ID.scene, "scene"), id(ID.chapter, "chapter"), id(ID.act, "act"), external_exports.literal("BOOK")]),
   reviewer: external_exports.enum(REVIEWERS),
   round: external_exports.number().int().min(1),
   verdict: external_exports.enum(["PASS", "FLAG", "FAIL"]),
@@ -27180,11 +27181,13 @@ var RunState = external_exports.object({
   // Old state files predate the option; they paused at every act.
   pauseAtActs: external_exports.boolean().default(true),
   spentUsd: external_exports.number().min(0),
-  current: external_exports.object({ kind: external_exports.enum(["scene", "chapter", "act"]), id: text, round: external_exports.number().int().min(1) }).nullable(),
+  current: external_exports.object({ kind: external_exports.enum(["scene", "chapter", "act", "book"]), id: text, round: external_exports.number().int().min(1) }).nullable(),
   completed: external_exports.array(id(ID.scene, "scene")),
   parked: external_exports.array(id(ID.scene, "scene")),
   checkedChapters: external_exports.array(id(ID.chapter, "chapter")),
   checkedActs: external_exports.array(id(ID.act, "act")),
+  // Old state files predate the book check; a finished book is checked on its next run.
+  checkedBook: external_exports.boolean().default(false),
   resumeAfter: external_exports.string().nullable(),
   lastError: external_exports.string().nullable()
 });
@@ -27206,7 +27209,7 @@ var RULES = [
   [/^canon\/knowledge\.yaml$/, Knowledge, false],
   [/^proposals\/P-\d{4,}\.yaml$/, Proposal, false],
   [/^reviews\/(SC-\d{3,}|CH-\d{2,}|ACT-\d+)\/park\.md$/, Park, true],
-  [/^reviews\/(SC-\d{3,}|CH-\d{2,}|ACT-\d+)\/[a-z-]+\.md$/, Review, true],
+  [/^reviews\/(SC-\d{3,}|CH-\d{2,}|ACT-\d+|BOOK)\/[a-z-]+\.md$/, Review, true],
   [/^notes\/open-questions\.yaml$/, OpenQuestions, false],
   [/^notes\/changes\/CHG-\d{4,}\.yaml$/, ChangeRequest, false],
   [/^bible\/characters\/CHAR-[A-Z0-9-]+\.md$/, Character, true],
@@ -27376,6 +27379,48 @@ function applyProposals(canon, proposals, scene, known) {
   return errors.length ? { ok: false, errors } : { ok: true, canon: { facts, events, entries }, added };
 }
 
+// src/accept/touchup.ts
+import { createHash } from "node:crypto";
+import { existsSync as existsSync2, readFileSync as readFileSync2 } from "node:fs";
+import { join as join2 } from "node:path";
+var TOUCHUP_MAX_WORDS = 200;
+var sealRel = (scene) => `run/touchup/${scene}`;
+var sha = (b) => createHash("sha256").update(b).digest("hex");
+var rerunOf = (flagged) => REQUIRED_REVIEWERS.filter((r) => flagged.includes(r) || r === "canon-auditor" || r === "gate");
+function readSeal(dir, scene) {
+  const s = join2(dir, sealRel(scene));
+  try {
+    const j = JSON.parse(readFileSync2(join2(s, "seal.json"), "utf8"));
+    const known = REQUIRED_REVIEWERS;
+    if (Number.isInteger(j?.round) && j.round > 0 && typeof j.plan === "string" && Array.isArray(j.rerun) && j.rerun.every((r) => known.includes(r)) && existsSync2(join2(s, "draft.md")) && REQUIRED_REVIEWERS.every((r) => existsSync2(join2(s, `${r}.md`)))) return { round: j.round, plan: j.plan, rerun: j.rerun };
+  } catch {
+  }
+  return null;
+}
+function wordsChanged(a, b) {
+  const x = a.split(/\s+/).filter(Boolean), y = b.split(/\s+/).filter(Boolean);
+  let s = 0;
+  while (s < x.length && s < y.length && x[s] === y[s]) s++;
+  let e = 0;
+  while (e < x.length - s && e < y.length - s && x[x.length - 1 - e] === y[y.length - 1 - e]) e++;
+  const m = x.slice(s, x.length - e), n = y.slice(s, y.length - e);
+  if (Math.abs(m.length - n.length) > TOUCHUP_MAX_WORDS) return m.length + n.length;
+  const max = TOUCHUP_MAX_WORDS, off = max + 1, v = new Int32Array(2 * max + 3);
+  for (let d = 0; d <= max; d++) {
+    for (let k = -d; k <= d; k += 2) {
+      let i = k === -d || k !== d && v[off + k - 1] < v[off + k + 1] ? v[off + k + 1] : v[off + k - 1] + 1;
+      let j = i - k;
+      while (i < m.length && j < n.length && m[i] === n[j]) {
+        i++;
+        j++;
+      }
+      v[off + k] = i;
+      if (i >= m.length && j >= n.length) return d;
+    }
+  }
+  return m.length + n.length;
+}
+
 // src/accept/accept.ts
 var JOURNAL = ".novelbrain/accept.journal";
 var JOURNAL_PATH = /^(canon\/(facts|timeline|knowledge)\.yaml|manuscript\/SC-\d{3,}\.md|outline\/scenes\/SC-\d{3,}\.yaml|drafts\/SC-\d{3,}\.md|proposals\/P-\d{4,}\.yaml|notes\/changes\/((applied|rejected)\/)?CHG-\d{4,}\.yaml)$/;
@@ -27387,7 +27432,7 @@ var msg = (e) => {
 };
 var defaultCommit = async (dir, paths, message) => {
   const tracked = new Set(git(dir, "ls-files", "-z", "--", ...paths).split("\0").filter(Boolean));
-  const live = paths.filter((p) => tracked.has(p) || existsSync2(join2(dir, p)));
+  const live = paths.filter((p) => tracked.has(p) || existsSync3(join3(dir, p)));
   git(dir, "add", "-f", "-A", "--", ...live);
   git(dir, "-c", "commit.gpgsign=false", "commit", "-q", "--no-verify", ...message.split("\n\n").flatMap((m) => ["-m", m]), "--", ...live);
   return git(dir, "rev-parse", "--short", "HEAD");
@@ -27421,7 +27466,7 @@ function linkedFolders(dir, paths) {
     const parts = rel.split("/").slice(0, -1);
     for (let i = 1; i <= parts.length; i++) {
       const sub = parts.slice(0, i).join("/");
-      if (lstatSync(join2(dir, sub), { throwIfNoEntry: false })?.isSymbolicLink()) {
+      if (lstatSync(join3(dir, sub), { throwIfNoEntry: false })?.isSymbolicLink()) {
         out.add(`${sub} is a link; Novel Brain does not write through links`);
         break;
       }
@@ -27434,14 +27479,14 @@ function writeAtomic(file2, data) {
   writeFileSync(`${file2}.nb-tmp`, data);
   renameSync(`${file2}.nb-tmp`, file2);
 }
-var readYaml = (file2) => parseYamlText(readFileSync2(file2, "utf8"));
+var readYaml = (file2) => parseYamlText(readFileSync3(file2, "utf8"));
 function ids(dir, schema) {
   const out = /* @__PURE__ */ new Set();
-  if (!existsSync2(dir)) return out;
+  if (!existsSync3(dir)) return out;
   for (const f of readdirSync2(dir)) {
     if (!f.endsWith(".md")) continue;
     try {
-      const r = schema.safeParse(parseFrontmatter(readFileSync2(join2(dir, f), "utf8"))?.data);
+      const r = schema.safeParse(parseFrontmatter(readFileSync3(join3(dir, f), "utf8"))?.data);
       if (r.success && `${r.data.id}.md` === f) out.add(r.data.id);
     } catch {
     }
@@ -27452,11 +27497,11 @@ function restore(dir, snapshot, mtimes) {
   const errors = [];
   for (const [rel, bytes] of snapshot) {
     try {
-      rmSync(join2(dir, `${rel}.nb-tmp`), { force: true });
+      rmSync(join3(dir, `${rel}.nb-tmp`), { force: true });
       if (bytes) {
-        writeAtomic(join2(dir, rel), bytes);
-        if (typeof mtimes[rel] === "number") utimesSync(join2(dir, rel), /* @__PURE__ */ new Date(), new Date(mtimes[rel]));
-      } else rmSync(join2(dir, rel), { force: true });
+        writeAtomic(join3(dir, rel), bytes);
+        if (typeof mtimes[rel] === "number") utimesSync(join3(dir, rel), /* @__PURE__ */ new Date(), new Date(mtimes[rel]));
+      } else rmSync(join3(dir, rel), { force: true });
     } catch (e) {
       errors.push(`${rel}: ${msg(e)}`);
     }
@@ -27469,7 +27514,7 @@ function restore(dir, snapshot, mtimes) {
   return errors;
 }
 function writeJournal(dir, scene, snapshot, mtimes, create, nonce) {
-  const file2 = join2(dir, JOURNAL);
+  const file2 = join3(dir, JOURNAL);
   mkdirSync(dirname(file2), { recursive: true });
   const snap = Object.fromEntries([...snapshot].map(([k, v]) => [k, v ? v.toString("base64") : null]));
   const fd = openSync(file2, create ? "wx" : "w");
@@ -27498,18 +27543,18 @@ function lock(dir, scene) {
     }
     let j;
     try {
-      j = JSON.parse(readFileSync2(join2(dir, JOURNAL), "utf8"));
+      j = JSON.parse(readFileSync3(join3(dir, JOURNAL), "utf8"));
     } catch (e) {
       if (e.code === "ENOENT") continue;
       if (!(e instanceof SyntaxError)) return `${JOURNAL} could not be read: ${msg(e)}`;
-      if (Date.now() - statSync2(join2(dir, JOURNAL)).mtimeMs < 6e4) return "another acceptance is running";
-      rmSync(join2(dir, JOURNAL), { force: true });
+      if (Date.now() - statSync2(join3(dir, JOURNAL)).mtimeMs < 6e4) return "another acceptance is running";
+      rmSync(join3(dir, JOURNAL), { force: true });
       continue;
     }
     if (typeof j.pid !== "number" || !j.snapshot || typeof j.snapshot !== "object") return `${JOURNAL} is malformed; it needs a person to check it`;
     if (alive(j.pid) && Date.now() - Date.parse(String(j.startedAt)) < LIVE_MS) return `another acceptance is running (${String(j.scene)}, pid ${j.pid})`;
     if (typeof j.nonce === "string" && landed(dir, typeof j.head === "string" ? j.head : null, j.nonce)) {
-      rmSync(join2(dir, JOURNAL), { force: true });
+      rmSync(join3(dir, JOURNAL), { force: true });
       continue;
     }
     const entries = Object.entries(j.snapshot);
@@ -27517,75 +27562,88 @@ function lock(dir, scene) {
       return `${JOURNAL} names paths accept never writes; it needs a person to check it`;
     const errors = restore(dir, new Map(entries.map(([k, v]) => [k, v === null ? null : Buffer.from(v, "base64")])), j.mtimes ?? {});
     if (errors.length) return `could not recover the interrupted acceptance of ${String(j.scene)} (${errors.join("; ")}); recovery journal kept`;
-    rmSync(join2(dir, JOURNAL), { force: true });
+    rmSync(join3(dir, JOURNAL), { force: true });
   }
   return "another acceptance is running";
 }
 async function accept(bookDir, scene, opts = {}) {
   try {
-    return await run(bookDir, scene, opts.gitCommit);
+    return await run(bookDir, scene, !opts.gitCommit, async () => {
+      if (opts.sealed) {
+        const why = unseal(bookDir, scene);
+        if (why) return { ok: false, reasons: [why] };
+      }
+      return locked(bookDir, scene, opts.gitCommit);
+    });
   } catch (e) {
     return { ok: false, reasons: [`internal error: ${msg(e)}`] };
   }
 }
-async function run(dir, scene, gitCommit) {
+async function seal(bookDir, scene) {
+  try {
+    return await run(bookDir, scene, false, async () => sealLocked(bookDir, scene));
+  } catch (e) {
+    return { ok: false, reasons: [`internal error: ${msg(e)}`] };
+  }
+}
+async function run(dir, scene, needsIdentity, body) {
   const refuse = (...reasons) => ({ ok: false, reasons });
   if (!/^SC-\d{3,}$/.test(scene)) return refuse(`${scene || "(empty)"} is not a scene id`);
   let book;
   try {
-    book = Book.safeParse(readYaml(join2(dir, "book.yaml")));
+    book = Book.safeParse(readYaml(join3(dir, "book.yaml")));
   } catch (e) {
     return refuse(`book.yaml could not be read: ${msg(e)}`);
   }
   if (!book.success) return refuse("book.yaml is not valid");
   if (book.data.status !== "active") return refuse(`the book is ${book.data.status}`);
-  if (!gitCommit && !hasIdentity(dir)) return refuse("git identity (user.name and user.email) is not set in the book repository");
+  if (needsIdentity && !hasIdentity(dir)) return refuse("git identity (user.name and user.email) is not set in the book repository");
   const held = lock(dir, scene);
   if (held) return refuse(held);
   let keepJournal = false;
   try {
-    const r = await locked(dir, scene, gitCommit);
-    keepJournal = !r.ok && r.reasons.some((x) => x.includes("recovery journal kept"));
+    const r = await body();
+    const reasons = r.reasons;
+    keepJournal = !r.ok && Array.isArray(reasons) && reasons.some((x) => String(x).includes("recovery journal kept"));
     return r;
   } finally {
-    if (!keepJournal) rmSync(join2(dir, JOURNAL), { force: true });
+    if (!keepJournal) rmSync(join3(dir, JOURNAL), { force: true });
   }
 }
-async function locked(dir, scene, gitCommit) {
-  const p = (rel) => join2(dir, rel);
-  const refuse = (...reasons2) => ({ ok: false, reasons: reasons2 });
+function check2(dir, scene) {
+  const p = (rel) => join3(dir, rel);
   const mtime = (rel) => statSync2(p(rel)).mtimeMs;
   const planRel = `outline/scenes/${scene}.yaml`, draftRel = `drafts/${scene}.md`, msRel = `manuscript/${scene}.md`;
-  if (!existsSync2(p(planRel))) return refuse(`${planRel} is missing`);
-  const planText = readFileSync2(p(planRel), "utf8");
+  if (!existsSync3(p(planRel))) return [`${planRel} is missing`];
+  const planText = readFileSync3(p(planRel), "utf8");
   let plan;
   try {
     plan = ScenePlan.safeParse(parseYamlText(planText));
   } catch (e) {
-    return refuse(`${planRel} could not be read: ${msg(e)}`);
+    return [`${planRel} could not be read: ${msg(e)}`];
   }
-  if (!plan.success) return refuse(`${planRel} is not a valid scene plan`);
-  if (!existsSync2(p(draftRel))) return refuse(`${draftRel} is missing`);
-  const draft = readFileSync2(p(draftRel));
+  if (!plan.success) return [`${planRel} is not a valid scene plan`];
+  if (!existsSync3(p(draftRel))) return [`${draftRel} is missing`];
+  const draft = readFileSync3(p(draftRel));
   let draftText;
   try {
     draftText = new TextDecoder("utf-8", { fatal: true }).decode(draft);
   } catch {
-    return refuse(`${draftRel} is not valid UTF-8 text`);
+    return [`${draftRel} is not valid UTF-8 text`];
   }
-  if (draftText.includes("\0")) return refuse(`${draftRel} contains a NUL byte`);
-  if (!draftText.trim()) return refuse(`${draftRel} is empty`);
+  if (draftText.includes("\0")) return [`${draftRel} contains a NUL byte`];
+  if (!draftText.trim()) return [`${draftRel} is empty`];
   const reasons = [];
   const reviews = [];
   for (const name of REQUIRED_REVIEWERS) {
     const rel = `reviews/${scene}/${name}.md`;
-    if (!existsSync2(p(rel))) {
+    if (!existsSync3(p(rel))) {
       reasons.push(`${name} review is missing`);
       continue;
     }
     let r;
     try {
-      r = Review.safeParse(parseFrontmatter(readFileSync2(p(rel), "utf8"))?.data);
+      r = Review.safeParse(parseFrontmatter(readFileSync3(p(rel), "utf8"))?.data);
     } catch {
       r = null;
     }
@@ -27604,15 +27662,24 @@ async function locked(dir, scene, gitCommit) {
     reviews.push({ name, rel, round: r.data.round, verdict: r.data.verdict });
   }
   const round = Math.max(0, ...reviews.map((r) => r.round));
+  let touch = null;
+  if (new Set(reviews.map((r) => r.round)).size > 1) {
+    const s = readSeal(dir, scene);
+    if (s && s.round === round - 1) touch = s;
+  }
+  const rerun = new Set(touch ? rerunOf(touch.rerun) : []);
+  const sealed = (name) => readFileSync3(join3(p(sealRel(scene)), `${name}.md`));
   for (const r of reviews) {
-    if (r.round !== round) reasons.push(`${r.name} review is at round ${r.round}, not ${round}`);
+    if (touch && !rerun.has(r.name)) {
+      if (r.round !== touch.round || !readFileSync3(p(r.rel)).equals(sealed(r.name))) reasons.push(`${r.name} review changed since the touch-up was sealed`);
+    } else if (r.round !== round) reasons.push(`${r.name} review is at round ${r.round}, not ${round}`);
     if (r.verdict === "FAIL") reasons.push(`${r.name} review is FAIL`);
   }
-  if (reasons.length) return refuse(...reasons);
+  if (reasons.length) return reasons;
   const proposals = [];
   const proposalRels = [];
   const propDir = p("proposals");
-  for (const ent of existsSync2(propDir) ? readdirSync2(propDir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name)) : []) {
+  for (const ent of existsSync3(propDir) ? readdirSync2(propDir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name)) : []) {
     if (ent.name === ".gitkeep" && ent.isFile()) continue;
     const rel = `proposals/${ent.name}`;
     if (!ent.isFile() || !/^P-\d{4,}\.yaml$/.test(ent.name)) {
@@ -27635,17 +27702,38 @@ async function locked(dir, scene, gitCommit) {
     proposals.push(r.data);
     proposalRels.push(rel);
   }
-  if (reasons.length) return refuse(...reasons);
-  const oldest = Math.min(...reviews.map((r) => mtime(r.rel)));
-  if (oldest < mtime(draftRel)) return refuse("reviews are older than the draft; review the current draft");
+  if (reasons.length) return reasons;
+  if (touch) {
+    const s = p(sealRel(scene));
+    if (sha(planText) !== touch.plan) reasons.push(`${planRel} changed since the touch-up was sealed`);
+    const was = existsSync3(join3(s, "proposals")) ? readdirSync2(join3(s, "proposals")).sort() : [];
+    const now = proposalRels.map((r) => r.slice("proposals/".length)).sort();
+    if (was.join() !== now.join() || now.some((f) => !readFileSync3(join3(s, "proposals", f)).equals(readFileSync3(p(`proposals/${f}`)))))
+      reasons.push("the proposal changed since the touch-up was sealed; run a full round");
+    const n = wordsChanged(readFileSync3(join3(s, "draft.md"), "utf8"), draftText);
+    if (n > TOUCHUP_MAX_WORDS) reasons.push(`the touch-up changes ${n} words, more than ${TOUCHUP_MAX_WORDS}; run a full round`);
+    if (reasons.length) return reasons;
+  }
+  const fresh = touch ? reviews.filter((r) => rerun.has(r.name)) : reviews;
+  const oldest = Math.min(...fresh.map((r) => mtime(r.rel)));
+  if (oldest < mtime(draftRel)) return ["reviews are older than the draft; review the current draft"];
   for (const rel of proposalRels)
     if (oldest < mtime(rel)) reasons.push(`reviews are older than ${rel}; review the current draft`);
-  if (reasons.length) return refuse(...reasons);
+  if (reasons.length) return reasons;
+  return { plan: plan.data, planText, planRel, draftRel, msRel, draft, draftText, reviews, round, proposals, proposalRels, touch };
+}
+async function locked(dir, scene, gitCommit) {
+  const p = (rel) => join3(dir, rel);
+  const refuse = (...reasons) => ({ ok: false, reasons });
+  const mtime = (rel) => statSync2(p(rel)).mtimeMs;
+  const c = check2(dir, scene);
+  if (Array.isArray(c)) return refuse(...c);
+  const { plan, planText, planRel, draftRel, msRel, draft, proposals, proposalRels } = c;
   const canonRel = { facts: "canon/facts.yaml", events: "canon/timeline.yaml", entries: "canon/knowledge.yaml" };
   const schemas = { facts: Facts, events: Timeline, entries: Knowledge };
   const canon = { facts: [], events: [], entries: [] };
   for (const k of ["facts", "events", "entries"]) {
-    if (!existsSync2(p(canonRel[k]))) continue;
+    if (!existsSync3(p(canonRel[k]))) continue;
     let r;
     try {
       r = schemas[k].safeParse(readYaml(p(canonRel[k])));
@@ -27661,7 +27749,7 @@ async function locked(dir, scene, gitCommit) {
   const paths = [...Object.values(canonRel), msRel, planRel, draftRel, ...proposalRels];
   const linked = linkedFolders(dir, paths);
   if (linked.length) return refuse(...linked);
-  const snapshot = new Map(paths.map((rel) => [rel, existsSync2(p(rel)) ? readFileSync2(p(rel)) : null]));
+  const snapshot = new Map(paths.map((rel) => [rel, existsSync3(p(rel)) ? readFileSync3(p(rel)) : null]));
   const mtimes = Object.fromEntries(paths.filter((rel) => snapshot.get(rel)).map((rel) => [rel, mtime(rel)]));
   const rollback = (why) => {
     const errors = restore(dir, snapshot, mtimes);
@@ -27679,18 +27767,85 @@ async function locked(dir, scene, gitCommit) {
     for (const rel of [draftRel, ...proposalRels]) rmSync(p(rel));
     const bad = validateBook(dir).filter((e) => e.file.startsWith("canon/") || e.file.startsWith("manuscript/") || e.file === planRel);
     if (bad.length) return rollback(bad.map((e) => `${e.file}: ${e.message}`));
-    const commit = await (gitCommit ?? defaultCommit)(dir, paths, `Accept ${scene}: ${plan.data.title.replace(/\s+/g, " ").trim()}
+    const commit = await (gitCommit ?? defaultCommit)(dir, paths, `Accept ${scene}: ${plan.title.replace(/\s+/g, " ").trim()}
 
 ${TRAILER}: ${nonce}`);
+    removeSeal(dir, scene);
     return { ok: true, commit };
   } catch (e) {
-    if (landed(dir, head0, nonce)) return { ok: true, commit: git(dir, "log", "--format=%h", "-F", `--grep=${TRAILER}: ${nonce}`, "-1") };
+    if (landed(dir, head0, nonce)) {
+      removeSeal(dir, scene);
+      return { ok: true, commit: git(dir, "log", "--format=%h", "-F", `--grep=${TRAILER}: ${nonce}`, "-1") };
+    }
     return rollback([`internal error: ${msg(e)}`]);
   }
 }
+var sealLinked = (dir, scene) => linkedFolders(dir, [`${sealRel(scene)}/proposals/P-0000.yaml`]);
+function removeSeal(dir, scene) {
+  try {
+    if (!sealLinked(dir, scene).length) rmSync(join3(dir, sealRel(scene)), { recursive: true, force: true });
+  } catch {
+  }
+}
+function sealLocked(dir, scene) {
+  const c = check2(dir, scene);
+  if (Array.isArray(c)) return { ok: false, reasons: c };
+  if (c.touch) return { ok: false, reasons: ["the reviews are already a touch-up; accept it, or accept with --sealed"] };
+  const linked = sealLinked(dir, scene);
+  if (linked.length) return { ok: false, reasons: linked };
+  const s = join3(dir, sealRel(scene));
+  rmSync(join3(s, "seal.json"), { force: true });
+  rmSync(s, { recursive: true, force: true });
+  mkdirSync(join3(s, "proposals"), { recursive: true });
+  writeFileSync(join3(s, "draft.md"), c.draft);
+  for (const r of c.reviews) writeFileSync(join3(s, `${r.name}.md`), readFileSync3(join3(dir, r.rel)));
+  for (const rel of c.proposalRels) writeFileSync(join3(s, rel), readFileSync3(join3(dir, rel)));
+  const flagged = c.reviews.filter((r) => r.verdict === "FLAG").map((r) => r.name);
+  writeFileSync(join3(s, "seal.json"), JSON.stringify({ round: c.round, plan: sha(c.planText), rerun: flagged }));
+  return { ok: true, rerun: rerunOf(flagged) };
+}
+function unseal(dir, scene) {
+  const s = join3(dir, sealRel(scene));
+  const sealLink = sealLinked(dir, scene);
+  if (sealLink.length) return sealLink[0];
+  const sl = readSeal(dir, scene);
+  if (!sl) return `there is no sealed touch-up for ${scene}`;
+  const planRel = `outline/scenes/${scene}.yaml`;
+  if (!existsSync3(join3(dir, planRel)) || sha(readFileSync3(join3(dir, planRel), "utf8")) !== sl.plan) return `${planRel} changed since the touch-up was sealed`;
+  const props = existsSync3(join3(s, "proposals")) ? readdirSync2(join3(s, "proposals")) : [];
+  if (props.some((f) => !/^P-\d{4,}\.yaml$/.test(f))) return `${sealRel(scene)} is malformed; run a full round`;
+  for (const f of existsSync3(join3(dir, "proposals")) ? readdirSync2(join3(dir, "proposals")) : []) {
+    if (props.includes(f) || !/^P-\d{4,}\.yaml$/.test(f)) continue;
+    let raw;
+    try {
+      raw = readYaml(join3(dir, "proposals", f));
+    } catch {
+      continue;
+    }
+    if (raw?.scene === scene) return `proposals/${f} is not in the sealed touch-up; run a full round`;
+  }
+  for (const f of props) {
+    if (!existsSync3(join3(dir, "proposals", f))) continue;
+    let raw;
+    try {
+      raw = readYaml(join3(dir, "proposals", f));
+    } catch {
+      continue;
+    }
+    const owner = raw?.scene;
+    if (typeof owner === "string" && owner !== scene) return `proposals/${f} now belongs to ${owner}; run a full round`;
+  }
+  const linked = linkedFolders(dir, [`drafts/${scene}.md`, `reviews/${scene}/gate.md`, ...props.map((f) => `proposals/${f}`)]);
+  if (linked.length) return linked[0];
+  writeAtomic(join3(dir, "drafts", `${scene}.md`), readFileSync3(join3(s, "draft.md")));
+  for (const f of props) writeAtomic(join3(dir, "proposals", f), readFileSync3(join3(s, "proposals", f)));
+  for (const r of REQUIRED_REVIEWERS) writeAtomic(join3(dir, "reviews", scene, `${r}.md`), readFileSync3(join3(s, `${r}.md`)));
+  return null;
+}
 if (process.argv[1] && /accept\.(mjs|ts)$/.test(process.argv[1])) {
-  const scene = process.argv[2] ?? "";
-  accept(process.cwd(), scene).then(
+  const [scene = "", flag, ...extra] = process.argv.slice(2);
+  const job = extra.length ? Promise.resolve({ ok: false, reasons: [`unexpected arguments: ${extra.join(" ")}`] }) : flag === void 0 ? accept(process.cwd(), scene) : flag === "--touchup" ? seal(process.cwd(), scene) : flag === "--sealed" ? accept(process.cwd(), scene, { sealed: true }) : Promise.resolve({ ok: false, reasons: [`unknown option ${flag}`] });
+  job.then(
     (r) => {
       process.stdout.write(JSON.stringify(r) + "\n");
       process.exit(r.ok ? 0 : r.reasons.some((x) => x.startsWith("internal error")) ? 2 : 1);
@@ -27716,6 +27871,7 @@ export {
   msg,
   readYaml,
   restore,
+  seal,
   writeAtomic,
   writeJournal
 };

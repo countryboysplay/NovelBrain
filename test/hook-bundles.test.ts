@@ -40,3 +40,12 @@ test('bundled validate rejects a bad scene plan', () => {
   const r = runHook('validate', { cwd: b, tool_name: 'Write', tool_input: { file_path: 'outline/scenes/SC-001.yaml' } }, b)
   expect(r.status).toBe(2)
 })
+
+test('bundled memory hook prints the briefing from outside the repo', () => {
+  const b = book()
+  mkdirSync(join(b, '.novelbrain'))
+  writeFileSync(join(b, '.novelbrain', 'memory.md'), '# lessons\nKeep it tight.\n')
+  const r = spawnSync('node', [join(hooks, 'memory.mjs'), 'start'], { input: JSON.stringify({ cwd: b }), cwd: b, encoding: 'utf8' })
+  expect(r.status).toBe(0)
+  expect(r.stdout).toContain('Keep it tight.')
+})

@@ -14,6 +14,10 @@ describe('Book', () => {
   test('rejects an unknown genre', () => expect(Book.safeParse({ ...book, genres: ['western'] }).success).toBe(false))
   test('requires at least one genre', () => expect(Book.safeParse({ ...book, genres: [] }).success).toBe(false))
   test('rejects a bad id', () => expect(Book.safeParse({ ...book, id: 'The Long Green' }).success).toBe(false))
+  test('series is null or a safe slug', () => {
+    expect(Book.safeParse({ ...book, series: 'wild-hearts' }).success).toBe(true)
+    for (const series of ['../x', 'Wild Hearts', 'a:b', '']) expect(Book.safeParse({ ...book, series }).success, series).toBe(false)
+  })
 })
 
 describe('ScenePlan', () => {
@@ -80,7 +84,7 @@ describe('schemaFor', () => {
 
 describe('Plan 3 schemas', () => {
   test('required reviewers', () => {
-    expect([...REQUIRED_REVIEWERS]).toEqual(['continuity', 'character', 'developmental', 'line', 'audience', 'canon-auditor', 'gate'])
+    expect([...REQUIRED_REVIEWERS]).toEqual(['continuity', 'character', 'developmental', 'line', 'audience', 'reader', 'canon-auditor', 'gate'])
   })
   test('review frontmatter', () => {
     expect(Review.safeParse({ scene: 'SC-001', reviewer: 'line', round: 1, verdict: 'FLAG' }).success).toBe(true)
@@ -101,6 +105,9 @@ describe('Plan 3 schemas', () => {
     expect(RunState.safeParse(s).success).toBe(true)
     expect(RunState.safeParse({ ...s, stopAt: 'forever' }).success).toBe(false)
     expect(RunState.parse({ ...s, costCapUsd: 25 })).not.toHaveProperty('costCapUsd') // old files still load
+    expect(RunState.parse(s).checkedBook).toBe(false) // old files load with the book unchecked
+    expect(Review.safeParse({ scene: 'BOOK', reviewer: 'developmental', round: 1, verdict: 'PASS' }).success).toBe(true)
+    expect(schemaFor('reviews/BOOK/developmental.md')?.frontmatter).toBe(true)
   })
   test('book keeps export settings', () => {
     const b = { id: 'b', title: 'B', status: 'active', audience: 'adult', genres: ['literary'], series: null, predecessor: null,

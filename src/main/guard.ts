@@ -1,5 +1,5 @@
 import { shell, type BrowserWindow, type WebContents } from 'electron'
-import { isAllowedUrl } from './security'
+import { allowAttach, isAllowedUrl } from './security'
 
 const openExternal = (url: string) => {
   if (url.startsWith('https:')) void shell.openExternal(url)
@@ -27,7 +27,7 @@ export function guardWebviews(win: BrowserWindow, getProject: () => string | nul
     prefs.contextIsolation = true
     prefs.sandbox = true
     prefs.webSecurity = true
-    if (!isAllowedUrl(params.src, getProject())) e.preventDefault()
+    if (!allowAttach(params, getProject())) e.preventDefault()
   })
   win.webContents.on('did-attach-webview', (_e, contents) => {
     lockDown(contents, url => isAllowedUrl(url, getProject()))

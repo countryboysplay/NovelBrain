@@ -36,7 +36,7 @@ Not covered by the sources: a typical protagonist age for adult fiction. No age 
 - AD-CON-02: Flag content that is intense or sensitive (sexual violence, abuse, suicide or self-harm, graphic gore, bigotry) and explicit sex scenes in a note to the reader. [S9]
 - AD-CON-03: Word content notes by naming the category specifically, such as "child abuse" rather than "abuse", and without naming plot twists. [S9]
 - AD-CON-04: Place content notes in the front pages, or in the back matter with a front note saying where they are. [S9]
-- AD-CON-05: Match tone, content and focus to what the premise and blurb promise. Abrupt changes in focus, tone, pacing, POV or era betray the promise. [S4]
+- AD-CON-05: Match tone, content and focus to what the premise and the Blurb in `bible/world/brief.md` promise. Abrupt changes in focus, tone, pacing, POV or era betray the promise. [S4]
 
 ## Pacing and themes
 - AD-PACE-01: Fast action is not required. The real pacing risk is drift, and a slow start is not rescued later. [S3]
@@ -74,7 +74,7 @@ Builds on the reader-engagement skill.
 - AD-RISK-01: Boredom from a slow, inert start is a common reason readers quit, and pages that are pleasant but slow get polite agent rejections. [S3][S4]
 - AD-RISK-02: No character connection. Give the protagonist coping, wants and secondary figures worth caring about. [S4]
 - AD-RISK-03: Low or fading stakes. Test: the protagonist's stated stake in the final third is quotable and at least as large as in chapter 1 (house setting). [S4]
-- AD-RISK-04: Bait-and-switch, where focus, tone, pacing, POV or era changes against the promise. Test: the chapter 1 tone, POV and era match the blurb and every later chapter (house setting). [S4]
+- AD-RISK-04: Bait-and-switch, where focus, tone, pacing, POV or era changes against the promise. Test: the chapter 1 tone, POV and era match the Blurb and Promise in `bible/world/brief.md` and every later chapter (house setting). [S4]
 - AD-RISK-05: Doldrums from too much exposition, backstory or info-dumping. Test: no chapter is mostly exposition or backstory with no plot-moving scene (house setting). [S4]
 - AD-RISK-06: Excess length: cut ruthlessly, remove redundancy, and trust the reader. [S4][S2]
 - AD-RISK-07: Violated genre expectations. Test: the ending delivers the resolution named in the genre skill's reader promise, or the departure is stated as deliberate in the plan (house setting). [S4]

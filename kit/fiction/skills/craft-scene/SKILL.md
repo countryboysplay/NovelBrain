@@ -53,11 +53,13 @@ These are craft principles, not formulas. Writers and editors disagree on terms 
 - CN-CHK-06: Important moments are on the page. [S7] [S5]
   Check: Pass if each major turning point and each scene the genre or outline promises is rendered as continuous scene text with action, dialogue and place. Fail if one is delivered only as summary or reported afterward.
 - CN-CHK-07: Scenes enter late and leave early. [S8] [S5]
-  Check: Pass if the first lines are already in the action or the scene problem, and the last lines fall on a decision, revelation, setback or open question rather than goodbyes or a restatement of what the reader knows. Fail if the first paragraph is routine setup (waking, travelling, greetings) or the last paragraph recaps the scene.
+  Check: Pass if the first lines are already in the action or the scene problem, and the last lines fall on a decision, revelation, setback or open question rather than goodbyes or a restatement of what the reader knows. Fail if the first paragraph is routine setup (waking, travelling, greetings) or the last paragraph recaps the scene. Leaving early is allowed; leaving without a closing shift is not (CN-CHK-10).
 - CN-CHK-08: Reaction and decision exist where a setback needs one. [S2] [S3]
   Check: Pass if after a major setback the character reacts and reaches a choice that sets the next goal, even if brief or by summary. Fail if the next goal appears with no reaction or motive after a major setback, or the sequel ends with no decision.
 - CN-CHK-09: Time gaps and summary are signposted and justified. [S6] [S7]
   Check: Pass if every jump in time or place is marked (white space, symbol, orienting line) and the summarised material is routine, transitional or already known. Fail if a gap leaves the reader unable to tell when or where the next scene is, or if summary covers a moment with conflict and consequence.
+- CN-CHK-10: The scene ends on a closed beat (its outcome lands on the page) or on a deliberate hand-off the next scene picks up at once. A scene that stops mid-action, with its situation unresolved and the next scene starting somewhere else, fails. [S9] [S2]
+  Check: Pass if the last lines land the scene's outcome or hand off on purpose to the scene that follows at once. Fail if the scene stops mid-action with its situation unresolved and the next scene starts elsewhere.
 
 ## Sources
 

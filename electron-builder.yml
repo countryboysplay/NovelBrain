@@ -12,6 +12,10 @@ extraResources:
     to: hooks
   - from: resources/accept
     to: accept
+  - from: resources/export
+    to: export
+  - from: THIRD_PARTY_NOTICES.md
+    to: THIRD_PARTY_NOTICES.md
   - from: resources/brand
     to: brand
   - from: kit

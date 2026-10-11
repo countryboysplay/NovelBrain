@@ -11,7 +11,7 @@ New adult is mostly a marketing and shelving label, not a reading level. Traditi
 No reliable source gives a new adult chapter length or a word-count standard for the label itself; only the genre bands below and one writers' organisation's "up to 120,000" ceiling are sourced.
 
 - NA-LEN-01: Treat new adult as a marketing label, not a reading level or a fixed length class. Set length from the genre (romance, romantasy, fantasy), not from the label. [S1][S5][S6]
-- NA-LEN-02: Contemporary romance runs 70,000-90,000 words total. Stay inside this band unless the book brief gives a reason, such as a dual timeline. [S2]
+- NA-LEN-02: Contemporary romance runs 70,000-90,000 words total. Stay inside this band unless `bible/world/brief.md` gives a reason, such as a dual timeline. [S2]
 - NA-LEN-03: Romantasy and historical romantasy run 90,000-110,000 words total. [S2]
 - NA-LEN-04: Do not use the new adult label to justify extra length. One source (S1) says new adult titles can run up to 120,000 words, and S2 says agents' interest may wane as word count rises (its example is a 110,000-word literary debut) and that overly long romance can drag, so any book above its genre band needs a stated reason in the brief. [S1][S2]
 - NA-LEN-05: If the plan splits a long story into several books, each book must close its own central relationship or plot question and also leave room for the series. [S2][S3]
@@ -31,7 +31,7 @@ No reliable source gives sentence length, paragraph length or reading-level numb
 - NA-POV-04: A protagonist aged 18-25 does not by itself make a book new adult. The book also needs the stage-of-life focus (romance, career, worldview, identity) rather than a general study of human behaviour. [S9][S1]
 
 ## Content limits
-- NA-CON-01: Decide the heat tier before drafting and write it into the book brief using named tiers: no kisses, sweet or clean, closed door or fade to black, open door or steamy, high heat or explicit. Nielsen found younger romance readers lean toward erotic romance, so the tier is a real choice. [S10][S1][S4]
+- NA-CON-01: Decide the heat tier before drafting and write it into the Shelf section of `bible/world/brief.md` using named tiers: no kisses, sweet or clean, closed door or fade to black, open door or steamy, high heat or explicit. Nielsen found younger romance readers lean toward erotic romance, so the tier is a real choice. [S10][S1][S4]
 - NA-CON-02: Tier labels are not standard across publishers and retailers. Define the book's tier in one sentence (for example "open door, three scenes, moderate detail") instead of relying on the tier word alone. [S10]
 - NA-CON-03: Heat level and content warnings are separate. A low-heat book can still hold violence, abuse or grief, so list those in a content note. [S10]
 - NA-CON-04: Violence, drugs, strong language and sex are permitted at adult levels, but every character in a sexual scene is 18 or older. This extends the 18+ protagonist norm in S5 and S6 and is kept as a safety floor (house setting). [S5][S6]
@@ -58,8 +58,8 @@ Builds on the reader-engagement skill.
   Check: the last chapter states the lead pair's status (together, committed or happy for now), and if the series flag is set it contains one unanswered question or new threat about the next book.
 - NA-ENG-06: Each firsts moment named in the brief (first kiss, first night, first apartment, first job day) is shown as a scene of at least 150 words, not summarised (house setting; S9 and S1 name firsts as the core of the stage). [S9][S1]
   Check: every firsts moment in the brief appears as a scene of at least 150 words containing one physical detail and one stated feeling. (house setting)
-- NA-ENG-07: The heat tier, trope list and content notes appear in the front matter or blurb so readers know what to expect before they start. [S10][S3]
-  Check: the front matter or blurb lists the heat tier, at least one trope, and any content warnings.
+- NA-ENG-07: The heat tier, trope list and content notes appear in the front matter or blurb (planned in the Blurb and Shelf sections of `bible/world/brief.md`) so readers know what to expect before they start. [S10][S3]
+  Check: the Blurb or Shelf section of `bible/world/brief.md` lists the heat tier, at least one trope, and any content warnings.
 - NA-ENG-08: In a series, each book's opening reintroduces the lead and the relationship state in its first 500 words (house setting). S3 shows readers binge series but states no recap rule; the 500-word limit is set to protect readers entering mid-series. [S3]
   Check: the first 500 words name the lead, the relationship state and the stake without needing knowledge of earlier books. (house setting)
 

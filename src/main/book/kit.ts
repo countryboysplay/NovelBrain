@@ -1,9 +1,10 @@
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { parse, stringify } from 'yaml'
+import { BRIEFING } from '../memory/indexes'
 import { git } from './git'
 
-export const KIT_VERSION = '3'
+export const KIT_VERSION = '14'
 
 const MANIFEST = join('.novelbrain', 'kit-manifest.json')
 
@@ -44,7 +45,11 @@ export async function upgradeKit(bookDir: string, kitDir: string, acceptBundle: 
   if (meta.status === 'archived') throw new Error('Archived books keep their kit.')
   installKit(bookDir, kitDir, acceptBundle)
   writeFileSync(join(bookDir, 'book.yaml'), stringify({ ...meta, kitVersion: KIT_VERSION }))
-  const paths = ['.claude/agents', '.claude/commands', '.claude/skills', '.claude/settings.json', 'CLAUDE.md', '.novelbrain', 'book.yaml']
+  const ignore = join(bookDir, '.gitignore')
+  const ignored = existsSync(ignore) ? readFileSync(ignore, 'utf8') : ''
+  if (!ignored.split(/\r?\n/).includes(BRIEFING)) writeFileSync(ignore, `${ignored}${ignored && !ignored.endsWith('\n') ? '\n' : ''}${BRIEFING}\n`)
+  // Explicit .novelbrain paths: a force-add of the folder would commit the git-ignored memory briefing.
+  const paths = ['.claude/agents', '.claude/commands', '.claude/skills', '.claude/settings.json', 'CLAUDE.md', '.novelbrain/accept.mjs', '.novelbrain/kit-manifest.json', 'book.yaml', '.gitignore']
     .filter(p => existsSync(join(bookDir, p)))
   await git(bookDir, 'add', '-f', '--', ...paths)
   await git(bookDir, '-c', 'commit.gpgsign=false', 'commit', '-q', '-m', `Update kit to v${KIT_VERSION}`)

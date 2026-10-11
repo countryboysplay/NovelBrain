@@ -19,3 +19,7 @@ export function isAllowedUrl(raw: string, projectDir: string | null): boolean {
   const rel = relative(join(projectDir, 'graphify-out'), target)
   return rel !== '' && !rel.startsWith('..') && !isAbsolute(rel)
 }
+
+/** A guest may attach only in its own in-memory `codeburn` partition, never the app's default session, and only at an allowed URL. */
+export const allowAttach = (params: Record<string, string>, projectDir: string | null): boolean =>
+  params.partition === 'codeburn' && isAllowedUrl(params.src, projectDir)

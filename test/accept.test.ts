@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { parse } from 'yaml'
-import { accept, defaultCommit } from '../src/accept/accept'
+import { accept, defaultCommit, seal } from '../src/accept/accept'
 import { REQUIRED_REVIEWERS } from '../src/shared/schemas'
 
 let dir: string
@@ -43,6 +43,13 @@ test('refuses when a reviewer is missing', async () => {
   execFileSync('cmd', ['/c', 'del', join(dir, 'reviews', 'SC-001', 'gate.md')])
   const r = await accept(dir, 'SC-001')
   expect(!r.ok && r.reasons.join()).toMatch(/gate/)
+})
+
+test('refuses a scene the blind reader has not read', async () => {
+  rmSync(join(dir, 'reviews', 'SC-001', 'reader.md'))
+  const r = await accept(dir, 'SC-001')
+  expect(r).toEqual({ ok: false, reasons: ['reader review is missing'] })
+  expect(existsSync(join(dir, 'manuscript', 'SC-001.md'))).toBe(false)
 })
 
 test('refuses FAIL', async () => {
@@ -381,4 +388,144 @@ test('the commit subject is one line even when the plan title holds blank lines'
   freshReviews()
   const r = await accept(dir, 'SC-001'); expect(r.ok ? '' : r.reasons.join()).toBe('')
   expect(g('log', '-1', '--format=%B')).toMatch(/^Accept SC-001: The Field Novel-Brain-Accept: fake\n\nNovel-Brain-Accept: [0-9a-f-]{36}$/)
+})
+
+// Touch-up: line and reader flagged at round 1; the author changes four words; four reviews rerun at round 2.
+const TOUCHED = 'Ruth walked the dead row at first light.\n'
+async function touchup() {
+  review('line', 'FLAG'); review('reader', 'FLAG'); freshReviews()
+  expect(await seal(dir, 'SC-001')).toEqual({ ok: true, rerun: ['line', 'reader', 'canon-auditor', 'gate'] })
+  put('drafts/SC-001.md', TOUCHED)
+  for (const r of ['line', 'reader', 'canon-auditor', 'gate']) { review(r, 'PASS', 2); later(`reviews/SC-001/${r}.md`, 240) }
+}
+const SEAL = 'run/touchup/SC-001'
+
+test('touch-up: seal refuses a round with a FAIL and writes nothing', async () => {
+  review('continuity', 'FAIL'); freshReviews()
+  const r = await seal(dir, 'SC-001')
+  expect(!r.ok && r.reasons).toContain('continuity review is FAIL')
+  expect(existsSync(join(dir, SEAL))).toBe(false)
+})
+
+test('touch-up: a sealed round with four reruns is accepted and the seal is removed', async () => {
+  await touchup()
+  const r = await accept(dir, 'SC-001')
+  expect(r.ok).toBe(true)
+  expect(readFileSync(join(dir, 'manuscript/SC-001.md'), 'utf8')).toBe(TOUCHED)
+  expect(existsSync(join(dir, SEAL))).toBe(false)
+  expect(g('log', '--format=%s', '-1')).toMatch(/^Accept SC-001/)
+})
+
+test('touch-up: refuses when a review that did not rerun changed', async () => {
+  await touchup()
+  put('reviews/SC-001/continuity.md', '---\nscene: SC-001\nreviewer: continuity\nround: 1\nverdict: PASS\n---\nOther notes.\n')
+  const r = await accept(dir, 'SC-001')
+  expect(!r.ok && r.reasons.join()).toMatch(/continuity review changed since the touch-up was sealed/)
+})
+
+test('touch-up: refuses a changed proposal or plan', async () => {
+  await touchup()
+  put('proposals/P-0001.yaml', readFileSync(join(dir, 'proposals/P-0001.yaml'), 'utf8').replace('The row died first', 'The row died last'))
+  put('outline/scenes/SC-001.yaml', readFileSync(join(dir, 'outline/scenes/SC-001.yaml'), 'utf8') + 'notes: changed\n')
+  for (const r of ['line', 'reader', 'canon-auditor', 'gate']) later(`reviews/SC-001/${r}.md`, 300)
+  const r = await accept(dir, 'SC-001')
+  const why = !r.ok ? r.reasons.join('\n') : ''
+  expect(why).toMatch(/proposal changed since the touch-up was sealed/)
+  expect(why).toMatch(/outline\/scenes\/SC-001.yaml changed since the touch-up was sealed/)
+})
+
+test('touch-up: refuses more than 200 words changed', async () => {
+  await touchup()
+  put('drafts/SC-001.md', 'Ruth walked the dead row at dawn. ' + 'word '.repeat(300))
+  for (const r of ['line', 'reader', 'canon-auditor', 'gate']) later(`reviews/SC-001/${r}.md`, 300)
+  const r = await accept(dir, 'SC-001')
+  expect(!r.ok && r.reasons.join()).toMatch(/the touch-up changes 300 words, more than 200; run a full round/)
+})
+
+test('touch-up: a stale seal is ignored after a full round', async () => {
+  await touchup()
+  for (const r of REQUIRED_REVIEWERS) review(r, 'PASS', 2)
+  for (const r of REQUIRED_REVIEWERS) later(`reviews/SC-001/${r}.md`, 300)
+  expect((await accept(dir, 'SC-001')).ok).toBe(true)
+  expect(existsSync(join(dir, SEAL))).toBe(false)
+})
+
+test('touch-up: --sealed puts back the sealed round and accepts it', async () => {
+  await touchup()
+  review('line', 'FAIL', 2); later('reviews/SC-001/line.md', 240)
+  expect((await accept(dir, 'SC-001')).ok).toBe(false)
+  const r = await accept(dir, 'SC-001', { sealed: true })
+  expect(r.ok).toBe(true)
+  expect(readFileSync(join(dir, 'manuscript/SC-001.md'), 'utf8')).toBe('Ruth walked the dead row at dawn.\n')
+  expect(existsSync(join(dir, SEAL))).toBe(false)
+})
+
+test('touch-up: --sealed finishes after a partial restore', async () => {
+  await touchup()
+  rmSync(join(dir, 'reviews/SC-001/gate.md')) // as if killed halfway through an earlier --sealed
+  expect((await accept(dir, 'SC-001', { sealed: true })).ok).toBe(true)
+})
+
+test('touch-up: --sealed without a seal refuses and changes nothing', async () => {
+  const r = await accept(dir, 'SC-001', { sealed: true })
+  expect(r).toEqual({ ok: false, reasons: ['there is no sealed touch-up for SC-001'] })
+  expect(existsSync(join(dir, 'manuscript/SC-001.md'))).toBe(false)
+})
+
+test('touch-up: --sealed refuses when the plan changed after sealing, and restores nothing', async () => {
+  await touchup()
+  put('outline/scenes/SC-001.yaml', readFileSync(join(dir, 'outline/scenes/SC-001.yaml'), 'utf8') + 'notes: changed\n')
+  const r = await accept(dir, 'SC-001', { sealed: true })
+  expect(r).toEqual({ ok: false, reasons: ['outline/scenes/SC-001.yaml changed since the touch-up was sealed'] })
+  expect(readFileSync(join(dir, 'drafts/SC-001.md'), 'utf8')).toBe(TOUCHED)
+  expect(existsSync(join(dir, 'manuscript/SC-001.md'))).toBe(false)
+})
+
+test('touch-up: seal refuses a set that is already a touch-up', async () => {
+  await touchup()
+  const r = await seal(dir, 'SC-001')
+  expect(!r.ok && r.reasons.join()).toMatch(/already a touch-up/)
+})
+
+test('touch-up: --sealed refuses a proposal for the scene that the sealed round never reviewed', async () => {
+  await touchup()
+  put('proposals/P-0002.yaml', 'id: P-0002\nscene: SC-001\nchanges:\n  - { op: add, target: facts, data: { statement: Unreviewed } }\n')
+  const r = await accept(dir, 'SC-001', { sealed: true })
+  expect(!r.ok && r.reasons.join()).toMatch(/proposals\/P-0002.yaml is not in the sealed touch-up/)
+  expect(existsSync(join(dir, 'manuscript/SC-001.md'))).toBe(false)
+  expect(facts()).not.toMatch(/Unreviewed/)
+})
+
+test('polish: a failed full round after a seal falls back with --sealed to the sealed round and its proposal', async () => {
+  review('line', 'FLAG'); freshReviews()
+  expect((await seal(dir, 'SC-001')).ok).toBe(true)
+  // the polish round rewrites the draft and the proposal, and all eight reviews run again; continuity fails
+  put('drafts/SC-001.md', 'Ruth walked the dead row at dawn, alone, and nobody else had heard her.\n')
+  put('proposals/P-0001.yaml', readFileSync(join(dir, 'proposals/P-0001.yaml'), 'utf8').replace('The row died first', 'Nobody heard Ruth'))
+  for (const r of REQUIRED_REVIEWERS) { review(r, r === 'continuity' ? 'FAIL' : 'PASS', 2); later(`reviews/SC-001/${r}.md`, 300) }
+  expect((await accept(dir, 'SC-001')).ok).toBe(false)
+  const r = await accept(dir, 'SC-001', { sealed: true })
+  expect(r.ok ? '' : r.reasons.join()).toBe('')
+  expect(readFileSync(join(dir, 'manuscript/SC-001.md'), 'utf8')).toBe('Ruth walked the dead row at dawn.\n')
+  expect(facts()).toMatch(/The row died first/)
+  expect(facts()).not.toMatch(/Nobody heard Ruth/)
+})
+
+test('touch-up: --sealed refuses to overwrite a proposal file that now belongs to another scene', async () => {
+  await touchup()
+  put('proposals/P-0001.yaml', 'id: P-0001\nscene: SC-002\nchanges:\n  - { op: add, target: facts, data: { statement: Another scene } }\n')
+  const r = await accept(dir, 'SC-001', { sealed: true })
+  expect(!r.ok && r.reasons.join()).toMatch(/proposals\/P-0001.yaml now belongs to SC-002/)
+  expect(readFileSync(join(dir, 'proposals/P-0001.yaml'), 'utf8')).toMatch(/Another scene/)
+})
+
+test('touch-up: --sealed refuses a seal folder reached through a junction', async () => {
+  await touchup()
+  const out = mkdtempSync(join(tmpdir(), 'nb seal out '))
+  cpSync(join(dir, 'run/touchup'), out, { recursive: true })
+  rmSync(join(dir, 'run/touchup'), { recursive: true })
+  symlinkSync(out, join(dir, 'run/touchup'), 'junction')
+  const r = await accept(dir, 'SC-001', { sealed: true })
+  expect(r.ok).toBe(false)
+  expect(readFileSync(join(dir, 'drafts/SC-001.md'), 'utf8')).toBe(TOUCHED)
 })

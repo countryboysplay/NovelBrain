@@ -36,7 +36,7 @@ PASS
 `
 
 test('the craft skills agents preload are known', () => {
-  for (const s of ['craft-structure', 'craft-scene', 'craft-character', 'craft-pov-dialogue', 'craft-revision']) assert.ok(knownSkills.has(s), s)
+  for (const s of ['craft-structure', 'craft-scene', 'craft-character', 'craft-pov-dialogue', 'craft-revision', 'craft-tells']) assert.ok(knownSkills.has(s), s)
 })
 test('good agent passes', () => {
   assert.deepEqual(checkAgent(good, 'test-agent.md', knownSkills), [])
@@ -111,7 +111,7 @@ test('headings inside code fences do not count', () => {
   assert.match(checkAgent(text, 'test-agent.md').join('\n'), /missing heading: Return/)
 })
 
-test('all twelve agents exist', () => {
+test('every agent in the table exists', () => {
   const files = existsSync(agentsDir) ? readdirSync(agentsDir) : []
   for (const name of Object.keys(AGENTS)) assert.ok(files.includes(`${name}.md`), `missing agent ${name}.md`)
 })
@@ -198,5 +198,213 @@ test('settings.json parses, allows the accept command and denies protected paths
 })
 
 test('CLAUDE.md states the founding rule verbatim', () => {
+  assert.ok(read('agents', 'line-editor.md').includes('under the rule it breaks'), 'a recurring catch is cited under a rule')
   assert.ok(read('CLAUDE.md').includes('The manuscript is prose. Canon is truth. The outline is intent. Memory is evidence. Character state is the present. The Brain must never confuse them.'))
+})
+
+test('the showrunner, author and line editor read the memory briefing', () => {
+  for (const p of [['skills', 'showrunner', 'SKILL.md'], ['agents', 'author.md'], ['agents', 'line-editor.md']])
+    assert.ok(read(...p).includes('Read `.novelbrain/memory.md`'), p.join('/'))
+  assert.ok(read('CLAUDE.md').includes('Lessons from earlier sessions are in `.novelbrain/memory.md` (written by Novel Brain; read-only).'))
+})
+
+// Plan 5b Task 1: the voice sheet.
+const SHEET = ['Narrator', 'Diction and register', 'Rhythm', 'Figurative language', 'Humour and attitude', 'Interiority and emotion', 'The narrator never', 'Banned', 'Samples']
+test('the style skill defines the nine voice-sheet sections, the architect writes them, the gate checks them', () => {
+  const style = read('skills', 'style', 'SKILL.md')
+  for (const h of SHEET) assert.match(style, new RegExp(`^### ${h}\r?$`, 'm'), h)
+  const architect = read('agents', 'story-architect.md')
+  assert.ok(architect.includes('Voice sheet, `bible/world/style.md`'))
+  assert.match(architect, /^ {2}- style\r?$/m)
+  const gate = read('agents', 'gate-checker.md')
+  assert.ok(gate.includes('GATE-PLAN-06'))
+  for (const h of SHEET) assert.ok(gate.includes(h), `gate names ${h}`)
+  assert.ok(read('skills', 'showrunner', 'SKILL.md').includes('dispatch `story-architect` to write the voice sheet'))
+  assert.ok(read('agents', 'line-editor.md').includes('`style.md: <section heading>`'))
+})
+
+// Plan 5b Task 2: prose tells.
+test('the author and line editor load craft-tells; the author runs the lesser-writer pass; the line editor fails on density', () => {
+  const author = read('agents', 'author.md'), line = read('agents', 'line-editor.md')
+  for (const t of [author, line]) assert.match(t, /^ {2}- craft-tells\r?$/m)
+  assert.ok(author.includes('lesser-writer pass (CT-TECH-01)'))
+  assert.ok(author.includes('CT-CHK-01 to CT-CHK-07'))
+  assert.ok(line.includes('CT-CHK-01 failed'))
+})
+
+// Plan 5b Task 3: the book brief.
+const BRIEF = ['Logline', 'Blurb', 'Promise', 'Shelf', 'Comps', 'Ending', 'Chapters', 'Story notes']
+test('the architect writes the brief, the gate checks it, its readers read it', () => {
+  const architect = read('agents', 'story-architect.md')
+  assert.ok(architect.includes('Book brief, `bible/world/brief.md`'))
+  for (const h of BRIEF) assert.ok(architect.includes(`\`## ${h}\``), h)
+  assert.ok(architect.includes('Never invent or guess a comp title'))
+  assert.ok(read('agents', 'gate-checker.md').includes('GATE-PLAN-07'))
+  assert.ok(read('skills', 'showrunner', 'SKILL.md').includes('`style.md` or `brief.md` is missing'))
+  for (const a of ['author.md', 'developmental-editor.md', 'audience-reviewer.md', 'flow-reader.md']) assert.ok(read('agents', a).includes('bible/world/brief.md'), a)
+})
+test('no skill points at notes that do not exist', () => {
+  for (const d of readdirSync(skillsDir)) {
+    const f = join(skillsDir, d, 'SKILL.md')
+    if (!existsSync(f)) continue
+    assert.doesNotMatch(readFileSync(f, 'utf8'), /in the story notes(?! section)|the book brief|in the notes\b|premise and blurb promise|the story notes say/i, d)
+  }
+})
+
+// Plan 5b Task 4: the polish round.
+test('a passing first round with many FLAGs gets one polish round', () => {
+  const s = read('skills', 'showrunner', 'SKILL.md')
+  for (const t of ['polish round', "this run's first round", 'Grep `Rule: CT-`', 'A run polishes at most once']) assert.ok(s.includes(t), t)
+  assert.ok(read('agents', 'author.md').includes('A polish round'))
+})
+
+// Plan 5b Task 5: openings.
+test('chapter 1 opening checks fail, and the opening scene always polishes', () => {
+  const aud = read('agents', 'audience-reviewer.md')
+  assert.ok(aud.includes('In chapter 1 the opening checks are FAIL, not FLAG'))
+  assert.ok(aud.includes('Read `.claude/skills/genre-<genre>/SKILL.md`'))
+  assert.ok(read('agents', 'developmental-editor.md').includes('In chapter 1, a scene that leaves the reader no question'))
+  assert.ok(read('skills', 'showrunner', 'SKILL.md').includes('The scene that opens the book'))
+})
+
+// Plan 5b Task 6: sameness.
+test('the author and line editor read the chapter so far; the flow reader checks sameness and fails it only at round 1', () => {
+  assert.ok(read('skills', 'scene-context', 'SKILL.md').includes('the chapter so far'))
+  assert.ok(read('agents', 'author.md').includes('Read the chapter so far for what it already did'))
+  assert.ok(read('agents', 'line-editor.md').includes('The chapter so far'))
+  const flow = read('agents', 'flow-reader.md')
+  for (const t of ['CT-CHK-05', 'CT-CHK-06', 'CT-CHK-08', 'CT-CHK-09', 'FAIL at round 1', 'FLAG at any later round']) assert.ok(flow.includes(t), t)
+  assert.match(flow, /^ {2}- craft-tells\r?$/m)
+  const tells = read('skills', 'craft-tells', 'SKILL.md')
+  for (const id of ['CT-CHK-08', 'CT-CHK-09']) assert.ok(tells.includes(`- ${id}:`), id)
+})
+
+// Plan 5b Task 7: the blind reader.
+test('the reader reads blind, writes its attention first, and is the eighth review', () => {
+  const r = read('agents', 'reader.md')
+  for (const t of ['## Attention', 'Gripped:', 'Skimmed:', 'Predicted:', 'Left with:', 'Turn the page:', 'Never read `outline/scenes/`', '`canon/`', '`.novelbrain/memory.md`'])
+    assert.ok(r.includes(t), t)
+  assert.ok(r.indexOf('`drafts/SC-###.md`') < r.indexOf('Read `.claude/skills/audience-<audience>/SKILL.md`'), 'the draft is read before any rule file')
+  const s = read('skills', 'showrunner', 'SKILL.md')
+  assert.ok(s.includes('eight reviews (seven reviewers plus the gate)'))
+  assert.ok(s.includes('Tell the reader only the scene id and the round'))
+  assert.ok(s.includes('`reader.md`'))
+  const g = read('agents', 'gate-checker.md')
+  assert.ok(g.includes('all seven of') && g.includes('`reader.md`') && g.includes('GATE-REV-06'))
+})
+
+// Plan 5b Task 8: the book check.
+test("the book check reads the whole book in the developmental editor's book mode", () => {
+  const s = read('skills', 'showrunner', 'SKILL.md')
+  assert.ok(s.includes('`developmental-editor` in book mode with target BOOK'))
+  const d = read('agents', 'developmental-editor.md')
+  for (const t of ['Book mode (target `BOOK`)', 'reviews/BOOK/developmental.md', 'THR-ENG-02', 'MYS-ENG-03', 'ROM-ENG-03', 'CS-CHK-09']) assert.ok(d.includes(t), t)
+  assert.ok(read('agents', 'gate-checker.md').includes('reviews/BOOK/gate.md'))
+})
+
+// Field fixes (Wild at Heart), Task 1: canon keeper and auditor.
+test('canon-auditor runs on sonnet and FLAGs a supported proposal fact the blind list missed', () => {
+  const t = read('agents', 'canon-auditor.md')
+  assert.match(t, /^model: sonnet$/m)
+  assert.doesNotMatch(t, /haiku/)
+  assert.ok(t.includes("the miss is the audit's, not the proposal's"))
+})
+test('canon-keeper runs on opus and records claims as claims', () => {
+  const t = read('agents', 'canon-keeper.md')
+  assert.match(t, /^model: opus$/m)
+  for (const s of ["that character's claim", 'Never invent or merge a time, date or place', 'line by line', 'P-0012', 'its `scene:` is this scene', 'for another scene, never touch it']) assert.ok(t.includes(s), s)
+})
+test('proposal-format separates a correction from a later development and numbers proposals by scene', () => {
+  const t = read('skills', 'proposal-format', 'SKILL.md')
+  for (const s of ['## Correction or later development', 'keeps the true part', 'P-0012']) assert.ok(t.includes(s), s)
+})
+
+// Field fixes, Task 2: reviewers and the author. (CN-CHK-07 to 09 exist, so scene closure is CN-CHK-10.)
+test('scene closure is a check the developmental editor and flow reader fail on', () => {
+  assert.ok(read('skills', 'craft-scene', 'SKILL.md').includes('- CN-CHK-10:'))
+  for (const f of ['developmental-editor.md', 'flow-reader.md']) assert.ok(read('agents', f).includes('CN-CHK-10'), f)
+})
+test('the author checks its draft against Banned, The narrator never and the lessons file', () => {
+  const t = read('agents', 'author.md')
+  for (const s of ['## Banned', '## The narrator never', 'bible/world/lessons.md']) assert.ok(t.includes(s), s)
+})
+test('the line editor quotes the draft, never its fix', () => {
+  assert.ok(read('agents', 'line-editor.md').includes('Copy every quote exactly from the draft, never from your proposed fix.'))
+})
+test('character and continuity reviewers leave missing canon entries to the canon keeper', () => {
+  for (const f of ['character-reviewer.md', 'continuity-reviewer.md']) assert.ok(read('agents', f).includes("is the canon-keeper's job"), f)
+})
+test('the audience reviewer carries answerBy: null questions forward', () => {
+  assert.ok(read('agents', 'audience-reviewer.md').includes('`answerBy: null`'))
+})
+test('lessons.md is writable, spoiler-free and read by the architect, author and line editor', () => {
+  const rules = read('skills', 'book-rules', 'SKILL.md')
+  for (const s of ['## Lessons', 'bible/world/lessons.md', 'spoiler-free']) assert.ok(rules.includes(s), s)
+  for (const f of ['story-architect.md', 'author.md', 'line-editor.md']) assert.ok(read('agents', f).includes('bible/world/lessons.md'), f)
+})
+test('no reply gives the story away', () => {
+  assert.ok(read('skills', 'book-rules', 'SKILL.md').includes('## No spoilers in replies'))
+  for (const f of ['audience-reviewer.md', 'flow-reader.md', 'line-editor.md', 'reader.md']) assert.ok(read('agents', f).includes('never names the solution'), f)
+})
+
+// Field fixes, Task 3: planning pre-flight, strict gate, showrunner.
+test('every scene plan states its pre-flight and the gate recounts it', () => {
+  const a = read('agents', 'story-architect.md')
+  for (const s of ['preflight:', 'at most 2 events', 'at most 1 plant']) assert.ok(a.includes(s), s)
+  const g = read('agents', 'gate-checker.md')
+  for (const s of ['GATE-PLAN-08', 'recount']) assert.ok(g.includes(s), s)
+})
+test('the gate reads every field it checks and never infers one', () => {
+  assert.ok(read('agents', 'gate-checker.md').includes('Never infer a value you did not read'))
+})
+test('the showrunner skips redo requests after a FAIL, sends contradictions back, keeps lessons and keeps the twist', () => {
+  const t = read('skills', 'showrunner', 'SKILL.md')
+  for (const s of ["skip the gate's redo requests", 'accidental contradiction', 'bible/world/lessons.md', 'No spoilers in replies']) assert.ok(t.includes(s), s)
+})
+
+// Field fixes, review round 1: CN-CHK-10 is a FAIL and the rules around it agree.
+test('CN-CHK-10 is a FAIL exception to the FLAG-only craft rule and does not clash with CN-CHK-07', () => {
+  assert.ok(read('agents', 'flow-reader.md').includes('except CN-CHK-10 (rule 10), which is a FAIL'))
+  assert.match(read('agents', 'flow-reader.md'), /^  - craft-scene$/m)
+  assert.ok(read('agents', 'developmental-editor.md').includes('A failed CN-CHK-10 is always a FAIL (rule 8a). Any other failed craft check is a FLAG'))
+  assert.ok(read('skills', 'craft-scene', 'SKILL.md').includes('Leaving early is allowed; leaving without a closing shift is not'))
+})
+test('CN-CHK-10 is listed among the FAIL cases of rule 7 and rule 5', () => {
+  assert.ok(read('agents', 'developmental-editor.md').includes('a scene that stops mid-action (CN-CHK-10, rule 8a)'))
+  assert.ok(read('agents', 'flow-reader.md').includes('a scene that stops mid-action (CN-CHK-10, rule 10)'))
+})
+
+// Field fixes, Task 5: the touch-up.
+test('the showrunner runs a touch-up and falls back to the sealed round', () => {
+  const t = read('skills', 'showrunner', 'SKILL.md')
+  for (const s of ['### Touch-up', 'node .novelbrain/accept.mjs SC-### --touchup', 'node .novelbrain/accept.mjs SC-### --sealed', 'does not count toward the three-round cap', 'at most 200 words']) assert.ok(t.includes(s), s)
+  assert.ok(read('agents', 'gate-checker.md').includes('touch-up of round R'))
+  assert.ok(read('agents', 'author.md').includes('touch-up'))
+})
+// Field fixes, final review: a touch-up only for prose FLAGs, and its refusals never loop or park a passing scene.
+test('the showrunner touches up only prose FLAGs and routes touch-up refusals without looping', () => {
+  const t = read('skills', 'showrunner', 'SKILL.md')
+  for (const s of [
+    'if any prose review (`continuity.md`, `character.md`, `developmental.md`, `line.md`, `audience.md` or `reader.md`) has a FLAG finding',
+    'FLAG findings only in `canon-auditor.md` or `gate.md` never start a touch-up',
+    'every refusal of plain `node .novelbrain/accept.mjs SC-###`, whatever its reasons',
+    'goes to Touch-up step 4\'s fallback: run `--sealed`. It is never a failed round.',
+    'A refusal of `node .novelbrain/accept.mjs SC-### --sealed` never leads to `--sealed` again.',
+    'Outside a touch-up, only these reasons are scene findings',
+  ]) assert.ok(t.includes(s), s)
+  assert.ok(!t.includes('a reason saying `changed since the touch-up was sealed`'))
+  assert.ok(read('CLAUDE.md').includes('node .novelbrain/accept.mjs SC-### --sealed'))
+})
+// Wild at Heart live run: a failed polish round parked a scene whose first round had passed.
+test('a polish round seals the passing round first and falls back to it if the polish fails', () => {
+  const t = read('skills', 'showrunner', 'SKILL.md')
+  for (const s of [
+    'To polish, first run exactly `node .novelbrain/accept.mjs SC-### --touchup` to seal round R',
+    'A failed polish round never goes to step 9 when round R is sealed',
+  ]) assert.ok(t.includes(s), s)
+  assert.ok(!t.includes('so a failed polish round can still be redrafted'))
+})
+// 5b polish: the developmental editor's mid-action FAIL keeps CN-CHK-10's hand-off exception, as the flow reader does.
+test('a deliberate hand-off passes CN-CHK-10 in the developmental editor too', () => {
+  assert.ok(read('agents', 'developmental-editor.md').includes('a deliberate hand-off, where the next scene\'s plan in `outline/scenes/` opens on the same moment and picks it up at once, passes'))
 })

@@ -18,7 +18,7 @@ export const slugify = (title: string) =>
 
 const DIRS = ['bible/characters', 'bible/places', 'bible/world', 'outline/scenes', 'canon', 'manuscript', 'drafts', 'proposals', 'reviews', 'notes', 'art']
 
-const GITIGNORE = ['exports/', 'run/', '.claude/settings.local.json', ''].join('\n')
+const GITIGNORE = ['exports/', 'run/', '.claude/settings.local.json', '.novelbrain/memory.md', ''].join('\n')
 
 export async function newBook(parentDir: string, opts: NewBookOpts, kitDir: string, hooksDir: string, acceptBundle: string): Promise<string> {
   const id = slugify(opts.title)

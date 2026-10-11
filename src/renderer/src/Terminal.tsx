@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { Terminal as XTerm } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 
-const cssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-const currentTheme = () => ({ background: cssVar('--term-bg'), foreground: cssVar('--term-fg'), cursor: cssVar('--accent') })
+const currentTheme = (el: Element) => ({ background: getComputedStyle(el).getPropertyValue('--term-bg').trim(), foreground: getComputedStyle(el).getPropertyValue('--term-fg').trim(), cursor: getComputedStyle(el).getPropertyValue('--accent').trim() })
 
-export function Terminal({ project }: { project: string | null }) {
+export function Terminal({ project, open = true }: { project: string | null; open?: boolean }) {
   const host = useRef<HTMLDivElement>(null)
   const term = useRef<XTerm>()
+  const refit = useRef<() => void>()
   const [ended, setEnded] = useState(false)
 
   useEffect(() => {
@@ -16,7 +16,7 @@ export function Terminal({ project }: { project: string | null }) {
       fontSize: 14,
       cursorBlink: !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
       screenReaderMode: true,
-      theme: currentTheme()
+      theme: currentTheme(host.current!)
     })
     const fit = new FitAddon()
     t.loadAddon(fit)
@@ -27,19 +27,14 @@ export function Terminal({ project }: { project: string | null }) {
         void navigator.clipboard.writeText(t.getSelection())
         return false
       }
-      // F6 is the documented escape hatch out of the terminal's keyboard trap (WCAG 2.1.2):
-      // every other key, including Tab, is sent straight to the shell.
-      if (e.type === 'keydown' && e.key === 'F6') {
-        host.current?.querySelector('textarea')?.blur()
-        document.querySelector<HTMLElement>('.bookbar button')?.focus()
-        return false
-      }
       return true
     })
     const resize = () => {
+      if (host.current!.clientWidth < 200) return
       fit.fit()
       window.api.ptyResize(t.cols, t.rows)
     }
+    refit.current = resize
     resize()
     t.onData(d => window.api.ptyWrite(d))
     const ro = new ResizeObserver(resize)
@@ -53,7 +48,7 @@ export function Terminal({ project }: { project: string | null }) {
     ]
     const media = window.matchMedia('(prefers-color-scheme: dark)')
     const onThemeChange = () => {
-      t.options.theme = currentTheme()
+      t.options.theme = currentTheme(host.current!)
     }
     media.addEventListener('change', onThemeChange)
     return () => {
@@ -68,9 +63,11 @@ export function Terminal({ project }: { project: string | null }) {
     term.current?.reset()
     setEnded(false)
   }, [project])
+  // The strip unfolds: fit to it once it has its size (a hidden host measured 0, so the observer's last fit was for nothing).
+  useEffect(() => { if (open) { const t = setTimeout(() => refit.current?.(), 0); return () => clearTimeout(t) } }, [open])
 
   return (
-    <main className="terminal-area">
+    <section className="terminal-area" aria-label="Claude Code terminal">
       <div ref={host} className="terminal" role="group" aria-label="Claude Code terminal. Press F6 to leave it." />
       {ended && (
         <div className="overlay" role="alert">
@@ -93,6 +90,6 @@ export function Terminal({ project }: { project: string | null }) {
           </button>
         </div>
       )}
-    </main>
+    </section>
   )
 }

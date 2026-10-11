@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { parse } from 'yaml'
-import { applyChange, listChanges, previewChange, rejectChange } from '../src/main/book/changes'
+import { applyChange, listChanges, nextChangeId, previewChange, proposeEdit, rejectChange } from '../src/main/book/changes'
 import { accept } from '../src/accept/accept'
 import { liveRuns, runKey } from '../src/main/run/state'
 import { REQUIRED_REVIEWERS } from '../src/shared/schemas'
@@ -278,4 +278,38 @@ test('I1 manuscript text for a scene with no accepted prose is refused', async (
   expect(!r.ok && r.reasons.join()).toMatch(/author changes can only edit accepted scenes; write new scenes through the run/)
   expect(existsSync(join(dir, 'manuscript/SC-001.md'))).toBe(false)
   expect(g('rev-parse', 'HEAD')).toBe(head)
+})
+
+test('a writer edit becomes the next pending change and goes through preview and apply', async () => {
+  put('notes/changes/applied/CHG-0007.yaml', 'x')
+  put('notes/changes/rejected/CHG-0003.yaml', 'x')
+  commit('Used ids')
+  expect(nextChangeId(dir)).toBe('CHG-0008')
+  const id = proposeEdit(dir, 'SC-001', 'Ruth walked the long row.\n')
+  expect(id).toBe('CHG-0008')
+  expect(read('manuscript/SC-001.md')).toBe('Ruth walked the dead row.\n')
+  expect(listChanges(dir)).toEqual([{ id, summary: "Writer's edit of SC-001", files: ['manuscript/SC-001.md'] }])
+  expect(previewChange(dir, id).files).toEqual([{ file: 'manuscript/SC-001.md', before: 'Ruth walked the dead row.\n', after: 'Ruth walked the long row.\n' }])
+  expect((await apply(id)).ok).toBe(true)
+  expect(read('manuscript/SC-001.md')).toBe('Ruth walked the long row.\n')
+})
+
+test('a writer edit is refused for a bad id, an unaccepted scene, an unchanged text or an archived book', () => {
+  expect(() => proposeEdit(dir, '../x', 'x')).toThrow(/Invalid scene id/)
+  expect(() => proposeEdit(dir, 'SC-002', 'x')).toThrow(/has no manuscript/)
+  expect(() => proposeEdit(dir, 'SC-001', 'Ruth walked the dead row.\n')).toThrow(/Nothing changed/)
+  put('manuscript/SC-001.md', '﻿Ruth walked the dead row.\r\n') // a Windows file, read by the studio as LF
+  expect(() => proposeEdit(dir, 'SC-001', 'Ruth walked the dead row.\n')).toThrow(/Nothing changed/)
+  expect(() => proposeEdit(dir, 'SC-001', 'a\0b')).toThrow()
+  put('book.yaml', read('book.yaml').replace('status: active', 'status: archived'))
+  expect(() => proposeEdit(dir, 'SC-001', 'Other.\n')).toThrow(/active book/)
+  expect(existsSync(join(dir, 'notes/changes'))).toBe(false)
+})
+
+test('a writer edit is saved while a run is going, but cannot be applied until it pauses', async () => {
+  liveRuns.add(runKey(dir))
+  try {
+    const id = proposeEdit(dir, 'SC-001', 'Changed.\n')
+    expect((await apply(id)).ok).toBe(false)
+  } finally { liveRuns.delete(runKey(dir)) }
 })

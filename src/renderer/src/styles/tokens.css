@@ -1,0 +1,42 @@
+/* The studio's two lights: night (default) and daylight. Settings > Theme sets Electron's
+   nativeTheme, which drives prefers-color-scheme. Scoped to .studio so the setup wizard keeps its own look (R9). */
+.studio {
+  color-scheme: dark;
+  --wall: #0e2638; --wall-2: #123149; --tray: #0a1824; --strip: #06111a; --chip: #163449; --well: #0b1a26;
+  --text: #f6f3ec; --muted: #bccbd8; --line: #6f8ea6;
+  --gesso: #f6f3ec; --ink: #1b1a1d; --ink-2: #3d3a42;
+  --yellow: #ffc21a; --red: #e0342a; --ultra: #3a5cff; --phthalo: #13a37f; --magenta: #d81b72; --sienna: #c0602e; --grey: #8b8592;
+  --ink-phthalo: #0b6b51; --ink-ultra: #2a44c8; --ink-magenta: #a3145a; --ink-sienna: #9a3f17; --ink-red: #a5231a; --ink-yellow: #7a5600; --ink-grey: #5a5560;
+  --pass-bg: #e7f4ee; --flag-bg: #fff1c7; --fail-bg: #fde3e0;
+  --act-1: #ffc21a; --act-2: #7fe3c4; --act-3: #ff9bc4;
+  --focus: #ffc21a; --focus-paper: #1d5fa8;
+  --term-bg: #06111a; --term-fg: #f6f3ec; --accent: #ffc21a;
+  --lamp: rgba(255, 226, 160, 0.13);
+  --shadow: 0 1px 0 rgba(0, 0, 0, 0.25), 0 10px 22px -10px rgba(0, 0, 0, 0.6);
+  --shadow-lift: 0 1px 0 rgba(0, 0, 0, 0.25), 0 18px 30px -12px rgba(0, 0, 0, 0.7);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px;
+  --chrome: 300px; /* what a view-high sheet gives up: top bar, wall padding, the view title and its gap, status bar */
+  --z-card: 1; --z-lift: 2; --z-bar: 3; --z-pop: 5; --z-skip: 10;
+  --col: min(100%, clamp(340px, 16vw, 420px)); /* an act column: fixed, growing a little with the screen */
+  --field: #fffdf8; --field-line: #6b6570; /* inputs on paper: 5.2:1 border on gesso */
+  --paper-rule: #d9d4c7; /* row rules in tables on paper (decorative, not a boundary) */
+  --font-ui: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Atkinson Hyperlegible', sans-serif;
+  --font-marker: 'Permanent Marker', 'Atkinson Hyperlegible', cursive;
+}
+@media (prefers-color-scheme: light) {
+  .studio {
+    color-scheme: light;
+    --wall: #d6e6ef; --wall-2: #c8dce7; --tray: #eaf1f5; --strip: #f4f8fa; --well: #b8cfdc;
+    --text: #10202c; --muted: #3b5568; --line: #62737f;
+    --act-1: #7a5600; --act-2: #0b6b51; --act-3: #a3145a;
+    --focus: #1d5fa8;
+    --chip: #fbfaf6; --term-bg: #f4f8fa; --term-fg: #10202c; --accent: #1d5fa8;
+    --lamp: rgba(255, 214, 120, 0.22);
+    --shadow: 0 1px 0 rgba(16, 32, 44, 0.18), 0 10px 22px -12px rgba(16, 32, 44, 0.35);
+    --shadow-lift: 0 1px 0 rgba(16, 32, 44, 0.18), 0 18px 30px -12px rgba(16, 32, 44, 0.45);
+  }
+}
+.studio :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
+.studio .paper :focus-visible, .studio dialog :focus-visible { outline-color: var(--focus-paper); }

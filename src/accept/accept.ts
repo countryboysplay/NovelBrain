@@ -8,6 +8,8 @@ import {
 } from '../shared/schemas'
 import { validateBook } from '../main/book/validate'
 import { applyProposals, type Canon } from './canon'
+import { TOUCHUP_MAX_WORDS, readSeal, rerunOf, sealRel, sha, wordsChanged, type Seal } from './touchup'
+import type { z } from 'zod'
 
 export type Result = { ok: true; commit: string } | { ok: false; reasons: string[] }
 export type GitCommit = (dir: string, paths: string[], message: string) => Promise<string>
@@ -150,16 +152,31 @@ export function lock(dir: string, scene: string): string | null {
   return 'another acceptance is running'
 }
 
-export async function accept(bookDir: string, scene: string, opts: { gitCommit?: GitCommit } = {}): Promise<Result> {
+export type SealResult = { ok: true; rerun: string[] } | { ok: false; reasons: string[] }
+type Refusal = { ok: false; reasons: string[] }
+
+export async function accept(bookDir: string, scene: string, opts: { gitCommit?: GitCommit; sealed?: boolean } = {}): Promise<Result> {
   try {
-    return await run(bookDir, scene, opts.gitCommit)
+    return await run(bookDir, scene, !opts.gitCommit, async (): Promise<Result> => {
+      if (opts.sealed) { const why = unseal(bookDir, scene); if (why) return { ok: false, reasons: [why] } }
+      return locked(bookDir, scene, opts.gitCommit)
+    })
   } catch (e) {
     return { ok: false, reasons: [`internal error: ${msg(e)}`] }
   }
 }
 
-async function run(dir: string, scene: string, gitCommit: GitCommit | undefined): Promise<Result> {
-  const refuse = (...reasons: string[]): Result => ({ ok: false, reasons })
+// Keep a passing round (draft, proposals, the eight reviews) so a FLAG-only fix needs only its reruns.
+export async function seal(bookDir: string, scene: string): Promise<SealResult> {
+  try {
+    return await run(bookDir, scene, false, async () => sealLocked(bookDir, scene))
+  } catch (e) {
+    return { ok: false, reasons: [`internal error: ${msg(e)}`] }
+  }
+}
+
+async function run<T extends { ok: boolean }>(dir: string, scene: string, needsIdentity: boolean, body: () => Promise<T>): Promise<T | Refusal> {
+  const refuse = (...reasons: string[]): Refusal => ({ ok: false, reasons })
 
   // 1. scene id and book status
   if (!/^SC-\d{3,}$/.test(scene)) return refuse(`${scene || '(empty)'} is not a scene id`)
@@ -167,43 +184,50 @@ async function run(dir: string, scene: string, gitCommit: GitCommit | undefined)
   try { book = Book.safeParse(readYaml(join(dir, 'book.yaml'))) } catch (e) { return refuse(`book.yaml could not be read: ${msg(e)}`) }
   if (!book.success) return refuse('book.yaml is not valid')
   if (book.data.status !== 'active') return refuse(`the book is ${book.data.status}`)
-  if (!gitCommit && !hasIdentity(dir)) return refuse('git identity (user.name and user.email) is not set in the book repository')
+  if (needsIdentity && !hasIdentity(dir)) return refuse('git identity (user.name and user.email) is not set in the book repository')
 
   // Everything after this reads and writes under the lock, so a concurrent run never sees a half-applied book.
   const held = lock(dir, scene)
   if (held) return refuse(held)
   let keepJournal = false
   try {
-    const r = await locked(dir, scene, gitCommit)
-    keepJournal = !r.ok && r.reasons.some(x => x.includes('recovery journal kept'))
+    const r = await body()
+    const reasons = (r as { reasons?: unknown }).reasons
+    keepJournal = !r.ok && Array.isArray(reasons) && reasons.some(x => String(x).includes('recovery journal kept'))
     return r
   } finally {
     if (!keepJournal) rmSync(join(dir, JOURNAL), { force: true })
   }
 }
 
-async function locked(dir: string, scene: string, gitCommit: GitCommit | undefined): Promise<Result> {
+interface Rev { name: string; rel: string; round: number; verdict: string }
+interface Checked {
+  plan: z.infer<typeof ScenePlan>; planText: string; planRel: string; draftRel: string; msRel: string; draft: Buffer; draftText: string
+  reviews: Rev[]; round: number; proposals: z.infer<typeof Proposal>[]; proposalRels: string[]; touch: Seal | null
+}
+
+// Steps 2 to 4 and freshness: may this scene's review set be accepted (or sealed)? Reads only.
+function check(dir: string, scene: string): Checked | string[] {
   const p = (rel: string) => join(dir, rel)
-  const refuse = (...reasons: string[]): Result => ({ ok: false, reasons })
   const mtime = (rel: string) => statSync(p(rel)).mtimeMs
 
   // 2. plan and draft
   const planRel = `outline/scenes/${scene}.yaml`, draftRel = `drafts/${scene}.md`, msRel = `manuscript/${scene}.md`
-  if (!existsSync(p(planRel))) return refuse(`${planRel} is missing`)
+  if (!existsSync(p(planRel))) return [`${planRel} is missing`]
   const planText = readFileSync(p(planRel), 'utf8')
   let plan
-  try { plan = ScenePlan.safeParse(parseYamlText(planText)) } catch (e) { return refuse(`${planRel} could not be read: ${msg(e)}`) }
-  if (!plan.success) return refuse(`${planRel} is not a valid scene plan`)
-  if (!existsSync(p(draftRel))) return refuse(`${draftRel} is missing`)
+  try { plan = ScenePlan.safeParse(parseYamlText(planText)) } catch (e) { return [`${planRel} could not be read: ${msg(e)}`] }
+  if (!plan.success) return [`${planRel} is not a valid scene plan`]
+  if (!existsSync(p(draftRel))) return [`${draftRel} is missing`]
   const draft = readFileSync(p(draftRel))
   let draftText: string
-  try { draftText = new TextDecoder('utf-8', { fatal: true }).decode(draft) } catch { return refuse(`${draftRel} is not valid UTF-8 text`) }
-  if (draftText.includes('\0')) return refuse(`${draftRel} contains a NUL byte`)
-  if (!draftText.trim()) return refuse(`${draftRel} is empty`)
+  try { draftText = new TextDecoder('utf-8', { fatal: true }).decode(draft) } catch { return [`${draftRel} is not valid UTF-8 text`] }
+  if (draftText.includes('\0')) return [`${draftRel} contains a NUL byte`]
+  if (!draftText.trim()) return [`${draftRel} is empty`]
 
   // 3. reviews
   const reasons: string[] = []
-  const reviews: { name: string; rel: string; round: number; verdict: string }[] = []
+  const reviews: Rev[] = []
   for (const name of REQUIRED_REVIEWERS) {
     const rel = `reviews/${scene}/${name}.md`
     if (!existsSync(p(rel))) { reasons.push(`${name} review is missing`); continue }
@@ -215,14 +239,21 @@ async function locked(dir: string, scene: string, gitCommit: GitCommit | undefin
     reviews.push({ name, rel, round: r.data.round, verdict: r.data.verdict })
   }
   const round = Math.max(0, ...reviews.map(r => r.round))
+  // A seal counts only for a mixed set one round on from it; after a full round a leftover seal is ignored.
+  let touch: Seal | null = null
+  if (new Set(reviews.map(r => r.round)).size > 1) { const s = readSeal(dir, scene); if (s && s.round === round - 1) touch = s }
+  const rerun = new Set(touch ? rerunOf(touch.rerun) : [])
+  const sealed = (name: string) => readFileSync(join(p(sealRel(scene)), `${name}.md`))
   for (const r of reviews) {
-    if (r.round !== round) reasons.push(`${r.name} review is at round ${r.round}, not ${round}`)
+    if (touch && !rerun.has(r.name)) {
+      if (r.round !== touch.round || !readFileSync(p(r.rel)).equals(sealed(r.name))) reasons.push(`${r.name} review changed since the touch-up was sealed`)
+    } else if (r.round !== round) reasons.push(`${r.name} review is at round ${r.round}, not ${round}`)
     if (r.verdict === 'FAIL') reasons.push(`${r.name} review is FAIL`)
   }
-  if (reasons.length) return refuse(...reasons)
+  if (reasons.length) return reasons
 
   // 4. proposals for this scene (a file that cannot be read might be for this scene, so it refuses)
-  const proposals = []
+  const proposals: z.infer<typeof Proposal>[] = []
   const proposalRels: string[] = []
   const propDir = p('proposals')
   for (const ent of existsSync(propDir) ? readdirSync(propDir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name)) : []) {
@@ -237,14 +268,40 @@ async function locked(dir: string, scene: string, gitCommit: GitCommit | undefin
     proposals.push(r.data)
     proposalRels.push(rel)
   }
-  if (reasons.length) return refuse(...reasons)
+  if (reasons.length) return reasons
 
-  // Reviews must be at least as new as everything they approve.
-  const oldest = Math.min(...reviews.map(r => mtime(r.rel)))
-  if (oldest < mtime(draftRel)) return refuse('reviews are older than the draft; review the current draft')
+  // A touch-up changes only the prose, and only a little: the plan and proposals are the ones the sealed round approved.
+  if (touch) {
+    const s = p(sealRel(scene))
+    if (sha(planText) !== touch.plan) reasons.push(`${planRel} changed since the touch-up was sealed`)
+    const was = existsSync(join(s, 'proposals')) ? readdirSync(join(s, 'proposals')).sort() : []
+    const now = proposalRels.map(r => r.slice('proposals/'.length)).sort()
+    if (was.join() !== now.join() || now.some(f => !readFileSync(join(s, 'proposals', f)).equals(readFileSync(p(`proposals/${f}`)))))
+      reasons.push('the proposal changed since the touch-up was sealed; run a full round')
+    const n = wordsChanged(readFileSync(join(s, 'draft.md'), 'utf8'), draftText)
+    if (n > TOUCHUP_MAX_WORDS) reasons.push(`the touch-up changes ${n} words, more than ${TOUCHUP_MAX_WORDS}; run a full round`)
+    if (reasons.length) return reasons
+  }
+
+  // Reviews must be at least as new as everything they approve (in a touch-up, the reruns are the ones that read this draft).
+  const fresh = touch ? reviews.filter(r => rerun.has(r.name)) : reviews
+  const oldest = Math.min(...fresh.map(r => mtime(r.rel)))
+  if (oldest < mtime(draftRel)) return ['reviews are older than the draft; review the current draft']
   for (const rel of proposalRels)
     if (oldest < mtime(rel)) reasons.push(`reviews are older than ${rel}; review the current draft`)
-  if (reasons.length) return refuse(...reasons)
+  if (reasons.length) return reasons
+
+  return { plan: plan.data, planText, planRel, draftRel, msRel, draft, draftText, reviews, round, proposals, proposalRels, touch }
+}
+
+async function locked(dir: string, scene: string, gitCommit: GitCommit | undefined): Promise<Result> {
+  const p = (rel: string) => join(dir, rel)
+  const refuse = (...reasons: string[]): Result => ({ ok: false, reasons })
+  const mtime = (rel: string) => statSync(p(rel)).mtimeMs
+
+  const c = check(dir, scene)
+  if (Array.isArray(c)) return refuse(...c)
+  const { plan, planText, planRel, draftRel, msRel, draft, proposals, proposalRels } = c
 
   // 5. canon
   const canonRel = { facts: 'canon/facts.yaml', events: 'canon/timeline.yaml', entries: 'canon/knowledge.yaml' } as const
@@ -291,18 +348,86 @@ async function locked(dir: string, scene: string, gitCommit: GitCommit | undefin
     if (bad.length) return rollback(bad.map(e => `${e.file}: ${e.message}`))
 
     // 9. commit
-    const commit = await (gitCommit ?? defaultCommit)(dir, paths, `Accept ${scene}: ${plan.data.title.replace(/\s+/g, ' ').trim()}\n\n${TRAILER}: ${nonce}`)
+    const commit = await (gitCommit ?? defaultCommit)(dir, paths, `Accept ${scene}: ${plan.title.replace(/\s+/g, ' ').trim()}\n\n${TRAILER}: ${nonce}`)
+    removeSeal(dir, scene)
     return { ok: true, commit }
   } catch (e) {
     // 10. restore, unless our commit landed before the error: then the scene is accepted and the files match it
-    if (landed(dir, head0, nonce)) return { ok: true, commit: git(dir, 'log', '--format=%h', '-F', `--grep=${TRAILER}: ${nonce}`, '-1') }
+    if (landed(dir, head0, nonce)) { removeSeal(dir, scene); return { ok: true, commit: git(dir, 'log', '--format=%h', '-F', `--grep=${TRAILER}: ${nonce}`, '-1') } }
     return rollback([`internal error: ${msg(e)}`])
   }
 }
 
+// The seal lives in run/ (git-ignored, guarded); a folder on its way that is a link would carry writes out of the book.
+const sealLinked = (dir: string, scene: string) => linkedFolders(dir, [`${sealRel(scene)}/proposals/P-0000.yaml`])
+
+// Best effort: a leftover seal is ignored once a later round is complete.
+function removeSeal(dir: string, scene: string) {
+  try { if (!sealLinked(dir, scene).length) rmSync(join(dir, sealRel(scene)), { recursive: true, force: true }) } catch { /* ignored by round */ }
+}
+
+function sealLocked(dir: string, scene: string): SealResult {
+  const c = check(dir, scene)
+  if (Array.isArray(c)) return { ok: false, reasons: c }
+  if (c.touch) return { ok: false, reasons: ['the reviews are already a touch-up; accept it, or accept with --sealed'] }
+  const linked = sealLinked(dir, scene)
+  if (linked.length) return { ok: false, reasons: linked }
+  const s = join(dir, sealRel(scene))
+  // seal.json goes first and comes back last, so a run killed in between leaves no seal.
+  rmSync(join(s, 'seal.json'), { force: true })
+  rmSync(s, { recursive: true, force: true })
+  mkdirSync(join(s, 'proposals'), { recursive: true })
+  writeFileSync(join(s, 'draft.md'), c.draft)
+  for (const r of c.reviews) writeFileSync(join(s, `${r.name}.md`), readFileSync(join(dir, r.rel)))
+  for (const rel of c.proposalRels) writeFileSync(join(s, rel), readFileSync(join(dir, rel)))
+  const flagged = c.reviews.filter(r => r.verdict === 'FLAG').map(r => r.name)
+  writeFileSync(join(s, 'seal.json'), JSON.stringify({ round: c.round, plan: sha(c.planText), rerun: flagged }))
+  return { ok: true, rerun: rerunOf(flagged) }
+}
+
+// Put the sealed draft, proposals and reviews back (reviews last, so they are newer than the draft), under the lock.
+// Idempotent: a run killed halfway is finished by running it again.
+function unseal(dir: string, scene: string): string | null {
+  const s = join(dir, sealRel(scene))
+  const sealLink = sealLinked(dir, scene)
+  if (sealLink.length) return sealLink[0]
+  const sl = readSeal(dir, scene)
+  if (!sl) return `there is no sealed touch-up for ${scene}`
+  const planRel = `outline/scenes/${scene}.yaml`
+  if (!existsSync(join(dir, planRel)) || sha(readFileSync(join(dir, planRel), 'utf8')) !== sl.plan) return `${planRel} changed since the touch-up was sealed`
+  const props = existsSync(join(s, 'proposals')) ? readdirSync(join(s, 'proposals')) : []
+  if (props.some(f => !/^P-\d{4,}\.yaml$/.test(f))) return `${sealRel(scene)} is malformed; run a full round`
+  // A proposal for this scene that the sealed round never reviewed would ride in on the restored reviews.
+  for (const f of existsSync(join(dir, 'proposals')) ? readdirSync(join(dir, 'proposals')) : []) {
+    if (props.includes(f) || !/^P-\d{4,}\.yaml$/.test(f)) continue // anything else the check refuses
+    let raw: unknown
+    try { raw = readYaml(join(dir, 'proposals', f)) } catch { continue } // the check refuses it
+    if ((raw as { scene?: unknown } | null)?.scene === scene) return `proposals/${f} is not in the sealed touch-up; run a full round`
+  }
+  for (const f of props) {
+    if (!existsSync(join(dir, 'proposals', f))) continue
+    let raw: unknown
+    try { raw = readYaml(join(dir, 'proposals', f)) } catch { continue } // unreadable: restoring it is the fix
+    const owner = (raw as { scene?: unknown } | null)?.scene
+    if (typeof owner === 'string' && owner !== scene) return `proposals/${f} now belongs to ${owner}; run a full round`
+  }
+  const linked = linkedFolders(dir, [`drafts/${scene}.md`, `reviews/${scene}/gate.md`, ...props.map(f => `proposals/${f}`)])
+  if (linked.length) return linked[0]
+  writeAtomic(join(dir, 'drafts', `${scene}.md`), readFileSync(join(s, 'draft.md')))
+  for (const f of props) writeAtomic(join(dir, 'proposals', f), readFileSync(join(s, 'proposals', f)))
+  for (const r of REQUIRED_REVIEWERS) writeAtomic(join(dir, 'reviews', scene, `${r}.md`), readFileSync(join(s, `${r}.md`)))
+  return null
+}
+
 if (process.argv[1] && /accept\.(mjs|ts)$/.test(process.argv[1])) {
-  const scene = process.argv[2] ?? ''
-  accept(process.cwd(), scene).then(
+  const [scene = '', flag, ...extra] = process.argv.slice(2)
+  const job: Promise<Result | SealResult> =
+    extra.length ? Promise.resolve({ ok: false, reasons: [`unexpected arguments: ${extra.join(' ')}`] })
+    : flag === undefined ? accept(process.cwd(), scene)
+    : flag === '--touchup' ? seal(process.cwd(), scene)
+    : flag === '--sealed' ? accept(process.cwd(), scene, { sealed: true })
+    : Promise.resolve({ ok: false, reasons: [`unknown option ${flag}`] })
+  job.then(
     r => { process.stdout.write(JSON.stringify(r) + '\n'); process.exit(r.ok ? 0 : r.reasons.some(x => x.startsWith('internal error')) ? 2 : 1) },
     e => { process.stdout.write(JSON.stringify({ ok: false, reasons: [`internal error: ${String(e)}`] }) + '\n'); process.exit(2) }
   )

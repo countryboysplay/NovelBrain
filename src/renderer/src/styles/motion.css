@@ -1,0 +1,29 @@
+/* Signature motion (spec 9). Classes come from useStoryEvents, so it plays on story events only (R13).
+   Nothing animates under prefers-reduced-motion, Settings > Motion > Reduced, or in the Manuscript view. */
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion='reduced']) .studio:not([data-view='manuscript']) {
+    .card { transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease); }
+    .card.live .wet-sheen { animation: sheen 3.2s linear infinite; }
+    .card.ev-drafting .underline .draw { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); animation: draw 1.2s var(--ease) forwards; }
+    .well.fresh i { animation: fill 0.55s var(--ease) both; }
+    .well.fresh .mark { animation: show 0.2s linear 0.35s both; }
+    .card.ev-accepted { animation: press 0.6s var(--ease) both; }
+    .card.ev-accepted .tape { animation: tape 0.5s var(--ease) 0.35s both; }
+    .card.ev-accepted .status { animation: flipst 0.5s var(--ease) 0.5s both; }
+    .card.ev-parked { animation: tilt 0.6s var(--ease) both; }
+    .card.ev-parked .circle rect:not(.again) { stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw 1.4s var(--ease) 0.3s forwards; }
+    .card.ev-parked .circle .again { animation: show 0.2s linear 1.5s both; }
+    .card.ev-redraft { animation: flip 1.2s var(--ease) both; }
+    .rail .on { transition: transform 0.3s var(--ease); }
+    summary::before { transition: transform 0.15s var(--ease); }
+  }
+}
+@keyframes sheen { from { background-position: 120% 0 } to { background-position: -120% 0 } }
+@keyframes draw { to { stroke-dashoffset: 0 } }
+@keyframes fill { 0% { transform: scale(0) } 70% { transform: scale(1.12) } 100% { transform: scale(1) } }
+@keyframes show { from { opacity: 0 } to { opacity: 1 } }
+@keyframes press { 0% { transform: rotate(var(--r)) scale(1) } 40% { transform: rotate(0) scale(1.035) } 100% { transform: rotate(var(--r)) scale(1) } }
+@keyframes tape { from { opacity: 0; transform: translateY(-30px) rotate(-14deg) } to { opacity: 1; transform: translateY(0) rotate(-3deg) } }
+@keyframes flipst { 0% { opacity: 1 } 49% { opacity: 0; transform: scale(0.6) } 100% { opacity: 1; transform: scale(1) } }
+@keyframes tilt { from { transform: rotate(0) } to { transform: rotate(var(--r)) } }
+@keyframes flip { 0% { transform: rotate(var(--r)) rotateY(0) } 45%, 55% { transform: rotate(var(--r)) rotateY(180deg) } 100% { transform: rotate(var(--r)) rotateY(360deg) } }

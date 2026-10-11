@@ -1,0 +1,383 @@
+/* Shared view furniture */
+.view > p, .view > section > p { max-width: 75ch; }
+.empty { max-width: 60ch; color: var(--muted); font-size: 16px; margin: 0; }
+.prose { white-space: pre-wrap; }
+.head { display: flex; align-items: center; gap: var(--s3) 14px; margin-bottom: var(--s5); flex-wrap: wrap; }
+.head h2 { margin: 0 var(--s3) 0 0 !important; }
+.chip { display: inline-flex; gap: 6px; align-items: center; background: var(--chip); border: 1px solid var(--line); border-radius: 999px; padding: 6px var(--s2) 6px 14px; font-size: 15px; margin: 0; white-space: nowrap; }
+.chip select { background: transparent; color: var(--text); border: 0; padding: var(--s1); }
+.chip select option { color: var(--ink); background: var(--gesso); }
+.chip:is(fieldset) { flex-wrap: wrap; white-space: normal; border-radius: 22px; }
+.chip label { display: inline-flex; gap: 6px; align-items: center; padding-right: var(--s2); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 0 auto; list-style: none; padding: 0; font-size: 15px; color: var(--muted); }
+.legend li { white-space: nowrap; }
+.legend i { display: inline-block; width: 14px; height: 8px; border-radius: 4px; margin-right: 6px; background: var(--c); }
+.view > .actions { display: flex; gap: var(--s3); justify-content: flex-start; margin: var(--s4) 0; }
+
+/* Tables: paper sheets that size to their content and wrap rather than spill. */
+.studio table { border-collapse: separate; border-spacing: 0; width: auto; min-width: min(100%, 720px); max-width: 100%; margin: var(--s4) 0; border-radius: 8px; overflow: hidden; box-shadow: var(--shadow); font-variant-numeric: tabular-nums; }
+.studio th, .studio td { text-align: left; padding: 10px var(--s4); border-bottom: 1px solid var(--paper-rule); vertical-align: top; overflow-wrap: anywhere; }
+.studio thead th { border-bottom: 2px solid var(--ink-2); overflow-wrap: normal; }
+.studio tbody tr:last-child > * { border-bottom: 0; }
+.superseded th { text-decoration: line-through; }
+
+/* Outline: fixed act columns pinned left to right; the rest stays wall. */
+.acts { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--s7) clamp(40px, 2.6vw, 64px); }
+.act { flex: 0 0 var(--col); width: var(--col); min-width: 0; }
+.marker { font: 400 clamp(25px, 0.4vw + 17px, 30px)/1.05 var(--font-marker); color: var(--act); margin: 0 0 var(--s5) 4px; transform: rotate(-1.2deg); }
+.act:nth-child(2) .marker { transform: rotate(0.8deg); }
+.marker small { display: block; font: 400 15px var(--font-ui); color: var(--muted); margin-top: 6px; }
+.stack { display: flex; flex-direction: column; gap: 22px; list-style: none; margin: 0; padding: 0; }
+.stack > li:has(> .status-needs-you) { margin-block: var(--s4); }
+
+/* The pinned scene card */
+.card { position: relative; border-radius: 6px; padding: 18px 18px var(--s4); box-shadow: var(--shadow); transform: rotate(var(--r, 0deg)); }
+@media (hover: hover) and (pointer: fine) {
+  .stack .card:hover { transform: rotate(0) translateY(-3px); box-shadow: var(--shadow-lift); }
+}
+.stack .card:focus-within { transform: rotate(0) translateY(-3px); box-shadow: var(--shadow-lift); }
+.card h4 { font: 800 clamp(21px, 0.3vw + 15px, 24px)/1.15 var(--font-display); letter-spacing: -0.015em; margin: 6px 0 0; }
+.card > .status + h4 { padding-right: 104px; }
+.card-open { all: unset; cursor: pointer; }
+.card-open::after { content: ''; position: absolute; inset: 0; border-radius: 6px; }
+.card-open:focus-visible::after { outline: 3px solid var(--focus); outline-offset: 4px; }
+.card .meta { display: flex; gap: 6px var(--s3); flex-wrap: wrap; font-size: 14px; color: var(--ink-2); margin: var(--s2) 0 0; font-variant-numeric: tabular-nums; }
+.card .pov { font-weight: 700; color: var(--c); }
+.card .wells { margin-top: var(--s3); }
+.tape { position: absolute; top: -11px; width: 84px; height: 24px; margin-left: -42px; background: rgba(255, 236, 170, 0.82); transform: rotate(-3deg); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25); clip-path: polygon(3% 0, 97% 2%, 100% 22%, 96% 42%, 100% 64%, 97% 82%, 100% 100%, 2% 98%, 0 78%, 4% 56%, 0 38%, 3% 18%); z-index: var(--z-lift); } /* torn at both ends */
+.status { position: absolute; right: 14px; top: 14px; font: 400 15px var(--font-marker); white-space: nowrap; }
+.status-accepted .status { color: var(--ink-phthalo); }
+.status-needs-you .status, .note { color: var(--ink-red); }
+.live .status { color: var(--ink-ultra); }
+.card.status-planned { background: transparent; color: var(--text); border: 2px dashed var(--line); box-shadow: none; }
+.status-planned .meta, .status-planned .status { color: var(--muted); }
+.status-planned .pov { color: var(--text); } /* the ink pigments are for paper; a planned card is bare wall */
+.status-needs-you { box-shadow: var(--shadow-lift); }
+/* The grease-pencil loop: one loose pass round the card from outside (it never crosses the card's words), the ends overlapping where the hand came back round. */
+.circle { position: absolute; inset: -22px -26px -20px -24px; width: calc(100% + 50px); height: calc(100% + 42px); overflow: visible; pointer-events: none; transform: rotate(-1.6deg); }
+.circle rect { x: 6px; y: 6px; width: calc(100% - 12px); height: calc(100% - 12px); rx: 56px; ry: 48px; } /* big corners, so it reads as a loop and still clears the card's own corners */
+.circle rect:not(.again) { stroke-dasharray: 97 3; stroke-dashoffset: -62; } /* the pencil lifts just before it closes */
+.circle .again { x: 2px; y: 10px; width: calc(100% - 4px); height: calc(100% - 20px); rx: 52px; ry: 44px; opacity: 0.75; stroke-dasharray: 28 72; stroke-dashoffset: -58; } /* the second, shorter pass along the top */
+.note { font: 400 17px/1.3 var(--font-marker); margin: var(--s3) 0 0; transform: rotate(-1deg); }
+.wet-sheen { position: absolute; inset: 0; border-radius: 6px; pointer-events: none; background: linear-gradient(110deg, transparent 30%, rgba(58, 92, 255, 0.1) 45%, transparent 60%); background-size: 250% 100%; }
+.underline { display: block; width: 100%; height: 12px; margin-top: 2px; }
+.back { position: absolute; inset: 0; display: grid; place-items: center; background: var(--gesso); border-radius: 6px; font: 400 18px var(--font-marker); color: var(--ink-red); transform: rotateY(180deg); backface-visibility: hidden; }
+.wells { display: flex; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.well { position: relative; width: 26px; height: 26px; border-radius: 50%; background: var(--well); box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6); overflow: hidden; }
+.well i { position: absolute; inset: 0; border-radius: 50%; background: var(--phthalo); }
+.well.v-flag i { background: var(--yellow); }
+.well.v-fail i { background: var(--red); }
+.well .mark { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; } /* ink over the pigment: flag a wave, fail a cross (3.9:1 on red, WCAG 1.4.11) */
+.vt-scene { view-transition-name: scene; }
+
+/* The scene's sheet: a panel pinned beside the board (not a modal), sticky while the board scrolls under it. */
+.board { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.board.with-panel { grid-template-columns: minmax(0, 1fr) minmax(360px, 34%); gap: 0 var(--s6); }
+.scene-panel { position: sticky; top: 0; max-height: calc(100vh - 150px); overflow: auto; overscroll-behavior: contain; border-radius: 8px; padding: 22px 26px 26px; box-shadow: var(--shadow-lift); transform: rotate(0.4deg); }
+.scene-panel:focus-visible { outline: 3px solid var(--focus-paper); outline-offset: 3px; }
+.scene-panel .close { float: right; margin: -4px -8px 0 var(--s3); }
+.scene-panel h3 { font: 800 26px/1.1 var(--font-display); letter-spacing: -0.02em; margin: 0 0 var(--s2); }
+.scene-panel h4 { font: 700 18px/1.2 var(--font-display); margin: var(--s5) 0 var(--s3); }
+.scene-panel h4 .muted { font: 400 14px var(--font-ui); }
+.scene-panel .meta { color: var(--ink-2); margin: 0 0 var(--s4); }
+.scene-panel dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--s2) 18px; margin: 0; }
+.scene-panel dt { font-weight: 700; }
+.scene-panel dd { margin: 0; }
+.scene-panel dd :is(ol, ul) { margin: 0; padding-left: 20px; }
+.scene-panel .notes { list-style: none; padding: 0; margin: var(--s3) 0 0; display: grid; gap: var(--s3); }
+.scene-panel .notes .prose { margin: var(--s1) 0 0; }
+.scene-panel details { margin-top: var(--s4); }
+@container (max-width: 1000px) {
+  .board.with-panel { grid-template-columns: minmax(0, 1fr); }
+  .scene-panel { position: static; max-height: none; order: -1; margin-bottom: var(--s6); }
+}
+
+/* Bible: the characters fan out like a hand, anchored under their heading. */
+.bible > section { margin-top: var(--s6); }
+.bible .grid { margin-top: 40px; } /* the first row's tape overhangs 11px and the marker heading hangs low; neither reaches the other */
+.hand { display: flex; flex-wrap: wrap; gap: var(--s6) 22px; justify-content: flex-start; list-style: none; padding: var(--s4) var(--s4) var(--s5); margin: 0; }
+.hand li { margin: 0; transform: rotate(var(--fan)) translateY(var(--drop)); transform-origin: 50% 100%; } /* a fan of at most 3 degrees: the cards lean, they never cross */
+.hand li:hover, .hand li:focus-within { z-index: var(--z-lift); transform: rotate(0) translateY(-14px); }
+.char { all: unset; position: relative; isolation: isolate; box-sizing: border-box; display: flex; flex-direction: column; gap: var(--s2); width: clamp(208px, 8vw + 56px, 272px); min-height: 150px; padding: 20px 18px 22px; border-radius: 8px; box-shadow: var(--shadow); cursor: pointer; background: var(--gesso); color: var(--ink); }
+.char:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.char .pov { font: 800 23px/1.1 var(--font-display); color: var(--c); }
+.char .meta { font-size: 14px; color: var(--ink-2); font-weight: 700; }
+.char .taste { font-size: 14px; line-height: 1.5; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden; }
+.char[aria-pressed='true'] { outline: 3px solid var(--focus); outline-offset: 3px; }
+.sheet { border-radius: 8px; padding: 20px var(--s5); box-shadow: var(--shadow); max-width: 75ch; }
+.sheet h4 { font: 800 24px/1.1 var(--font-display); margin: 0 0 6px; }
+.grid { list-style: none; padding: 0; margin: var(--s4) 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 22px; max-width: 1800px; }
+.grid > li, .grid > .card { border-radius: 8px; padding: 18px; box-shadow: var(--shadow); }
+.grid > .pinned { padding-top: 22px; }
+.grid .prose { margin: var(--s2) 0 0; }
+
+/* Manuscript: the reader is a page; nothing on it moves. */
+.reader { max-width: 70ch; margin: 0 auto var(--s6); padding: clamp(40px, 4vw, 80px) clamp(32px, 4vw, 88px); border-radius: 3px; box-shadow: var(--shadow-lift), inset 0 0 0 1px rgba(27, 26, 29, 0.06); }
+.reader textarea { background: repeating-linear-gradient(transparent 0, transparent calc(1em * var(--lh, 1.6) - 1px), rgba(27, 26, 29, 0.14) calc(1em * var(--lh, 1.6) - 1px), rgba(27, 26, 29, 0.14) calc(1em * var(--lh, 1.6))) local, linear-gradient(90deg, transparent 32px, rgba(224, 52, 42, 0.45) 32px, rgba(224, 52, 42, 0.45) 33px, transparent 33px) local, var(--field); padding: 0 var(--s4) 0 44px; border-color: var(--field-line); } /* ruled, with a red margin */
+.reader .chapter { font: 800 30px var(--font-display); margin: 0.5em 0 0.5em; }
+.reader .scene-title { font: 700 14px var(--font-ui); color: var(--ink-2); }
+.reader textarea { width: 100%; font: inherit; line-height: inherit; resize: vertical; }
+.reader .actions { display: flex; gap: var(--s3); justify-content: flex-end; margin-top: var(--s3); }
+.reader hr { border: 0; text-align: center; }
+.reader hr::after { content: '* * *'; color: var(--ink-2); }
+.reader-tools { display: flex; flex-wrap: wrap; gap: var(--s3) var(--s6); align-items: center; margin-bottom: var(--s5); }
+.reader-tools fieldset { border: 0; display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4); align-items: center; padding: 0; margin: 0; }
+.reader-tools legend { float: left; font-weight: 700; margin-right: var(--s1); padding: 0; }
+.reader-tools label { display: inline-flex; gap: var(--s2); align-items: center; white-space: nowrap; }
+.reader-tools > label { font-weight: 700; }
+.reader-tools output { font-weight: 400; font-variant-numeric: tabular-nums; min-width: 4ch; }
+
+/* Timeline: event cards hung along a string; each card carries its own length of string so a wrapped row keeps the line. */
+.string { list-style: none; margin: var(--s2) 0 0; padding: 26px 0 0; display: flex; flex-wrap: wrap; gap: 44px 14px; max-width: 1800px; }
+.string .event { position: relative; width: clamp(220px, 11vw + 80px, 300px); padding: 20px 18px 16px; }
+.string .event::after { content: ''; position: absolute; left: 0; right: 0; top: -26px; height: 3px; background: var(--line); opacity: 0.6; border-radius: 2px; transform: rotate(calc(var(--r) * -1)); } /* the string, level even though the card hangs crooked */
+.string .tack { position: absolute; top: -8px; left: 50%; width: 16px; height: 16px; margin-left: -8px; border-radius: 50% 45% 55% 50%; background: var(--c); box-shadow: 0 2px 3px rgba(0, 0, 0, 0.35), inset 0 -2px 0 rgba(0, 0, 0, 0.25); }
+.string .when { font: 400 19px/1.1 var(--font-marker); color: var(--ink-2); margin: 0 0 var(--s2); }
+.string .what { margin: 0; font-weight: 700; font-size: 16px; line-height: 1.35; }
+.string .meta { display: flex; flex-direction: column; gap: 2px; margin: var(--s3) 0 0; font-size: 14px; color: var(--ink-2); }
+.timeline > h3 { margin-top: var(--s7); }
+
+/* Series */
+.shelf { list-style: none; padding: 0; display: flex; gap: 22px; flex-wrap: wrap; margin: var(--s5) 0 0; } /* room for the first row's tape under the title */
+.spine { width: 260px; padding-top: 22px; }
+.spine .meta { color: var(--ink-2); margin: var(--s1) 0 0; font-size: 14px; }
+.cast { list-style: none; margin: var(--s3) 0 0; padding: 0; display: grid; gap: 4px; font-size: 14px; }
+.cast li { display: flex; align-items: center; gap: var(--s2); }
+.cast i { width: 10px; height: 10px; border-radius: 50% 45% 55% 50%; background: var(--c); flex: none; }
+.spine button { margin-top: var(--s3); }
+.series > .chip { margin-top: var(--s4); }
+/* The series form and Archive stack, so the button never floats beside the form's note. */
+.series > .actions { flex-direction: column; align-items: flex-start; }
+.series-name p { margin: var(--s2) 0 0; }
+/* On a wide wall the shelf (and its table) takes the left, the book's series settings the right. */
+@container (min-width: 1300px) {
+  .series { display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 520px); gap: 0 var(--s7); align-items: start; }
+  .series > * { grid-column: 1; justify-self: start; }
+  .series > h2 { grid-column: 1 / -1; }
+  .series > .shelf { grid-row: span 2; }
+  .series > .actions, .series > .actions + .muted { grid-column: 2; }
+  .series > .actions { margin-top: var(--s5); }
+}
+.spine.current { outline: 3px solid var(--yellow); outline-offset: 4px; }
+
+/* Run: the primary action as paint dabs, the live scene pinned on an easel at wall scale, the queue under it, the log a paper strip the full height of the wall. */
+.run-view { display: grid; grid-template-columns: minmax(0, clamp(560px, 30vw, 800px)) minmax(0, 1fr); gap: var(--s4) var(--s8); align-items: start; max-width: 2000px; }
+.run-view.with-panel { grid-template-columns: minmax(0, clamp(560px, 30vw, 800px)) minmax(300px, 26%) minmax(0, 1fr); gap: var(--s4) var(--s7); }
+.run-view > h2 { grid-column: 1 / -1; }
+.run-side { display: grid; gap: var(--s4); min-width: 0; }
+.dabs { display: flex; gap: var(--s4); align-items: center; flex-wrap: wrap; }
+.studio button.dab { position: relative; isolation: isolate; border: 0; background: transparent; color: var(--text); font: 800 clamp(22px, 0.4vw + 14px, 26px)/1 var(--font-display); letter-spacing: -0.01em; padding: 18px 40px; min-height: 64px; border-radius: 12px; }
+.studio button.dab::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--chip); border-radius: 46% 54% 50% 50% / 55% 45% 55% 45%; box-shadow: inset 0 0 0 1px var(--line); filter: url(#rough); } /* a dab of paint: the rough edge is the brush filter */
+.studio button.dab.go { color: var(--ink); }
+.studio button.dab.go::before { background: var(--yellow); box-shadow: 0 8px 16px -6px rgba(0, 0, 0, 0.55); }
+.controls { display: flex; gap: var(--s3) var(--s4); align-items: center; flex-wrap: wrap; }
+.controls input[type='checkbox'] { width: 18px; height: 18px; margin: 0; }
+.easel { --col: 100%; display: grid; gap: 30px; padding: 10px 0 6px; }
+.easel .card { padding: 26px 30px 30px; }
+.easel .card h4 { font-size: clamp(30px, 0.9vw + 18px, 40px); }
+.easel .card > .status + h4 { padding-right: 136px; }
+.easel .status { font-size: 19px; right: 22px; top: 20px; }
+.easel .meta { font-size: 16px; margin-top: var(--s3); }
+.easel .wells { gap: 10px; margin-top: var(--s4); }
+.easel .well { width: 36px; height: 36px; }
+.easel .note { font-size: 21px; }
+.easel .underline { height: 16px; }
+.run-facts { font-variant-numeric: tabular-nums; }
+.run-facts p { margin: var(--s1) 0 0; font-size: 16px; }
+.run-facts .run-label { font: 800 20px/1.15 var(--font-display); margin: 4px 0 var(--s2); padding-right: 120px; }
+.run-facts.focal .run-label { font-size: clamp(28px, 0.9vw + 16px, 38px); padding-right: 136px; }
+.run-facts.focal p:not(.run-label) { font-size: 17px; }
+.run-facts.status-running .status { color: var(--ink-ultra); }
+.run-facts:is(.status-paused, .status-checkpoint, .status-usage-limit) .status { color: var(--ink-yellow); }
+.run-facts.status-done .status { color: var(--ink-phthalo); }
+.run-facts.status-error .status { color: var(--ink-red); }
+/* The queue: the Outline's cards at a smaller scale; the 30px easel gap already clears the first card's overhang. */
+.queue { --col: 100%; margin-top: var(--s4); }
+.queue > .marker { margin: 0 0 var(--s4) 4px; transform: rotate(0.8deg); }
+.queue .card { padding: 14px 16px 14px; }
+.queue .card h4 { font-size: 19px; margin-top: 4px; }
+.queue .card > .status + h4 { padding-right: 96px; }
+.queue .status { font-size: 14px; right: 12px; top: 12px; }
+.queue .card .meta { font-size: 13px; margin-top: 6px; }
+.queue .well { width: 22px; height: 22px; }
+.queue .more { margin: var(--s4) 0 0 4px; font-size: 15px; }
+/* The log: one strip of paper, pinned to the wall's top as the easel column scrolls under it; lines scroll inside, newest at the bottom. */
+.run-log { min-width: 0; position: sticky; top: 0; display: flex; flex-direction: column; height: calc(100vh - var(--chrome)); min-height: 240px; }
+.run-log .marker { margin: 0 0 var(--s4) 6px; flex: none; }
+.log { flex: 1; min-height: 0; width: min(100%, 110ch); overflow: auto; overscroll-behavior: contain; font: 14px/1.6 'Cascadia Mono', Consolas, monospace; padding: 18px 26px 20px; border-radius: 4px; box-shadow: var(--shadow); transform: rotate(0.3deg); }
+.log ol { list-style: none; margin: 0; padding: 0; }
+.log li { overflow-wrap: anywhere; padding: 4px 0; border-bottom: 1px dashed #cfc9bb; }
+.log li:last-child { border-bottom: 0; }
+.log time { color: var(--ink-2); margin-right: var(--s3); }
+/* One column below 1100px; with the sheet open, three columns need 1400px, so it stacks sooner. */
+@container (max-width: 1400px) {
+  .run-view.with-panel { grid-template-columns: minmax(0, 1fr); }
+  .run-view.with-panel .scene-panel { position: static; max-height: none; }
+  .run-view.with-panel .run-log { position: static; height: auto; margin-top: var(--s4); }
+  .run-view.with-panel .log { max-height: 50vh; }
+}
+@container (max-width: 1100px) {
+  .run-view { grid-template-columns: minmax(0, 1fr); }
+  .run-log { position: static; height: auto; margin-top: var(--s4); }
+  .log { max-height: 50vh; }
+}
+
+/* Needs you: the parked card and its notes read as a pair at a readable measure. */
+.parked { list-style: none; padding: var(--s4) 0 var(--s4) 18px; margin: 0; display: grid; grid-template-columns: var(--col) minmax(0, 75ch); gap: var(--s7) var(--s7); align-items: start; }
+.parked > li { display: contents; }
+.needs { border-radius: 6px; padding: 18px 22px; margin: var(--s4) 0; box-shadow: var(--shadow); max-width: 75ch; }
+.parked .needs { margin: 0; }
+.needs > p:first-child { margin-top: 0; }
+.needs ul, .needs ol { padding-left: 20px; margin: 0; }
+.needs li + li { margin-top: var(--s3); }
+.needs li button { margin: var(--s1) var(--s2) var(--s1) 0; }
+.needs details { margin: var(--s3) 0; }
+.needs pre { white-space: pre-wrap; max-height: 40vh; overflow: auto; background: var(--field); border: 1px solid var(--field-line); border-radius: 6px; padding: var(--s3); font: 13px/1.45 'Cascadia Mono', Consolas, monospace; }
+.diff-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.diff h4 { font: 700 15px var(--font-ui); margin: var(--s3) 0 6px; }
+.needs .diff pre { margin: 0; }
+@container (max-width: 860px) {
+  .parked { grid-template-columns: minmax(0, 1fr); padding-right: 18px; }
+}
+
+/* Cost: one ledger sheet, ruled lines, the figures in a column on the right. */
+.ledger { position: relative; width: min(100%, 1100px); margin: var(--s5) 0 0; padding: 26px 32px 28px; border-radius: 4px; box-shadow: var(--shadow); transform: rotate(-0.3deg); font-variant-numeric: tabular-nums; }
+.ledger .marker { margin: 0 0 var(--s4); }
+.lines { margin: 0; max-width: 56ch; }
+.lines > div { display: flex; justify-content: space-between; gap: var(--s4); padding: 6px 0; border-bottom: 1px dashed #cfc9bb; font-weight: 700; font-size: 16px; }
+.lines > div.sub { font-weight: 400; color: var(--ink-2); padding-left: var(--s5); font-size: 15px; }
+.lines dt, .lines dd { margin: 0; }
+.lines > div:first-child dd { font: 800 24px/1 var(--font-display); }
+.sheets { display: flex; flex-wrap: wrap; gap: 0 var(--s6); align-items: flex-start; }
+.ledger table { box-shadow: none; border-radius: 0; min-width: min(100%, 380px); flex: 1 1 380px; margin: var(--s5) 0 0; }
+.ledger th, .ledger td { padding: 6px var(--s2) 6px 0; border-bottom: 1px dashed #cfc9bb; }
+.ledger td { text-align: right; }
+.ledger thead th { border-bottom: 2px solid var(--ink-2); }
+.ledger thead th:last-child { text-align: right; }
+.codeburn-sheet { margin-top: var(--s7); }
+.codeburn-sheet .empty button { margin-left: var(--s2); }
+.codeburn-frame { position: relative; margin-bottom: var(--s5); }
+.codeburn { display: block; width: 100%; height: 70vh; border-radius: 6px; background: var(--gesso); }
+.codeburn-frame.loading .codeburn { height: 120px; opacity: 0; } /* the sheet is blank until the page answers; show the wait, not the blank */
+.codeburn-wait { position: absolute; inset: 0; display: grid; place-content: center; margin: 0; border-radius: 6px; border: 2px dashed var(--line); color: var(--muted); font: 400 18px var(--font-marker); }
+@container (max-width: 600px) { .studio th, .studio td { padding: 8px 10px; } .studio thead th { overflow-wrap: anywhere; } }
+.codeburn.focused { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+/* Memory */
+.memory > button { margin: var(--s2) 0; }
+.memory .needs { max-width: 100ch; }
+/* On a wide wall the lessons and the checkpoint log sit side by side. */
+@container (min-width: 1300px) {
+  .memory { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--s5); align-items: start; }
+  .memory > * { grid-column: 1 / -1; justify-self: start; }
+  .memory > .needs { grid-column: auto; justify-self: stretch; max-width: none; }
+}
+
+/* Story map: the drawing beside its table on a wide wall. */
+.map { width: 100%; max-height: max(360px, calc(100vh - var(--chrome))); }
+.map-label { font: 700 16px var(--font-ui); fill: var(--text); paint-order: stroke; stroke: var(--wall); stroke-width: 6px; stroke-linejoin: round; }
+@container (min-width: 1300px) {
+  .story-map { display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 560px); gap: 0 var(--s7); align-items: start; }
+  .story-map > h2, .story-map > p { grid-column: 1 / -1; }
+  .story-map > p { margin-top: 0; }
+  .story-map table { min-width: 0; width: 100%; margin-top: 0; }
+}
+
+/* Settings: fieldsets laid out as cards across the wall. */
+.settings { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: var(--s5); align-items: start; max-width: 1800px; }
+.settings > h2 { grid-column: 1 / -1; }
+.settings fieldset { border: 0; border-radius: 8px; padding: 18px 22px; margin: 0; display: grid; gap: var(--s3); box-shadow: var(--shadow); min-width: 0; }
+.settings legend { float: left; width: 100%; padding: 0; margin-bottom: var(--s1); font: 400 22px var(--font-marker); color: var(--ink-ultra); }
+.settings label { display: flex; gap: var(--s2); align-items: center; }
+.settings label:has(> input:not([type='checkbox'], [type='radio'])) { justify-content: space-between; gap: var(--s4); font-weight: 700; }
+.settings label > input:not([type='checkbox'], [type='radio']) { width: 14ch; flex: none; }
+.settings input[type='checkbox'], .settings input[type='radio'] { width: 18px; height: 18px; margin: 0; accent-color: var(--focus-paper); }
+.settings .muted { margin: 0; font-size: 14px; }
+
+/* Crew: each agent's own portrait in a pigment ring (initials until it has drawn itself), its name, role and line. */
+.studio .avatar { border-radius: 50%; flex: none; box-shadow: 0 0 0 2px var(--c, var(--grey)); background: var(--gesso); object-fit: cover; }
+.studio .avatar.initials { display: inline-grid; place-items: center; font: 700 13px/1 var(--font-ui); color: var(--ink); }
+.settings fieldset.crew { grid-column: 1 / -1; }
+.crew .num { font-variant-numeric: tabular-nums; }
+.crew-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr)); gap: var(--s5) 22px; }
+.crew-list li { display: flex; gap: var(--s3); align-items: flex-start; min-width: 0; }
+.crew-list li > div { min-width: 0; flex: 1; }
+.crew-list p { margin: 0; }
+.crew-list .who strong { font: 700 19px/1.2 var(--font-display); }
+.crew-list .about { font-style: italic; margin: var(--s1) 0 var(--s2); overflow-wrap: anywhere; }
+.crew-list .warn { color: var(--ink-red); font-weight: 700; }
+.crew-edit { display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center; margin-top: var(--s2); }
+.crew-edit input { width: 14ch; }
+
+/* Writers' room: a chat server on the studio wall. Channels and members are wall chrome; the channel itself is a paper sheet. */
+.room-grid { display: grid; grid-template-columns: 200px minmax(0, 1fr) 260px; gap: var(--s5); height: max(380px, calc(100vh - 250px)); }
+.room-grid > * { min-height: 0; }
+.channels ul, .members ul { list-style: none; margin: 0; padding: 0; }
+.channels { overflow: auto; overscroll-behavior: contain; }
+.studio .wall .channels button { display: flex; align-items: center; gap: 6px; width: 100%; background: none; border: 0; color: var(--muted); padding: var(--s2) var(--s3); text-align: left; font-weight: 400; }
+.studio .wall .channels button.on { background: var(--chip); color: var(--text); font-weight: 700; box-shadow: inset 0 0 0 1px var(--line); }
+.channels .unread { margin-left: auto; min-width: 22px; padding: 0 7px; border-radius: 999px; background: var(--red); color: #fff; font: 700 13px/22px var(--font-ui); text-align: center; font-variant-numeric: tabular-nums; } /* 4.6:1 white on cadmium red */
+.channel { display: flex; flex-direction: column; min-width: 0; border-radius: 4px; box-shadow: var(--shadow); }
+.channel-head { padding: var(--s3) var(--s5); border-bottom: 1px dashed var(--paper-rule); }
+.studio .channel-head h3 { font: 700 20px/1.2 var(--font-display); margin: 0; }
+.channel-head p { margin: 2px 0 0; font-size: 14px; color: var(--ink-2); }
+.room-scroll { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: var(--s3) var(--s5) var(--s4); }
+.room-scroll:focus-visible { outline: 3px solid var(--focus-paper); outline-offset: -3px; }
+.room-scroll ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.room .quiet { color: var(--ink-2); max-width: 60ch; }
+.thread h4 { margin: var(--s3) 0 var(--s1); }
+.studio .thread h4 button { display: inline-flex; align-items: center; gap: 10px; background: none; border: 0; color: var(--ink); padding: var(--s1) var(--s2) var(--s1) 0; font: 700 15px var(--font-ui); white-space: normal; text-align: left; }
+.thread h4 button::before { content: ''; flex: none; width: 8px; height: 8px; border: solid currentColor; border-width: 0 2.5px 2.5px 0; transform: rotate(-45deg); }
+.thread h4 button[aria-expanded='true']::before { transform: translateY(-2px) rotate(45deg); }
+.thread ol { margin-left: var(--s4); padding-left: var(--s3); border-left: 2px solid var(--paper-rule); }
+.msg { display: flex; gap: var(--s3); align-items: flex-start; padding: 6px var(--s2); border-radius: 6px; }
+.msg-body { min-width: 0; }
+.msg .who { margin: 0; font-size: 14px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.msg .name { font-weight: 700; font-size: 15px; }
+.msg .verdict { font: 400 15px var(--font-marker); }
+.msg .msg-step { font-weight: 700; margin-right: var(--s2); }
+.msg time { color: var(--ink-2); font-size: 13px; }
+.msg .said { margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 90ch; }
+.msg.v-pass { background: var(--pass-bg); } .msg.v-pass .verdict { color: var(--ink-phthalo); }
+.msg.v-flag { background: var(--flag-bg); } .msg.v-flag .verdict { color: var(--ink-yellow); }
+.msg.v-fail { background: var(--fail-bg); } .msg.v-fail .verdict { color: var(--ink-red); }
+.msg.system { display: block; text-align: center; font-size: 14px; color: var(--ink-2); padding: var(--s2); }
+.waiting { border-left: 4px solid var(--red); padding: var(--s2) var(--s3); margin-bottom: var(--s3); }
+.waiting ul { margin: 0; padding-left: 18px; display: grid; gap: var(--s1); }
+.typing { display: flex; gap: var(--s2); align-items: center; margin: var(--s2) 0 0 var(--s2); }
+.typing .dots i { display: inline-block; width: 6px; height: 6px; margin: 0 2px; border-radius: 50%; background: var(--ink-grey); animation: room-dot 1.2s infinite ease-in-out; }
+.typing .dots i:nth-child(2) { animation-delay: 0.2s; }
+.typing .dots i:nth-child(3) { animation-delay: 0.4s; }
+@keyframes room-dot { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .typing { display: none; } }
+:root[data-motion='reduced'] .typing { display: none; }
+.studio .channel .jump { align-self: center; margin: 0 0 var(--s3); }
+.members { overflow: auto; overscroll-behavior: contain; }
+.studio .members h3 { font: 700 18px/1.2 var(--font-display); margin: 0 0 var(--s2); }
+.members h4 { font: 700 13px var(--font-ui); color: var(--muted); margin: var(--s3) 0 var(--s1); }
+.member { display: flex; gap: var(--s3); align-items: center; padding: 6px 0; }
+.member > span:last-child { display: grid; min-width: 0; }
+.member .name { font-weight: 700; }
+.member .about { font-size: 13px; color: var(--muted); }
+.member .face { position: relative; display: inline-flex; }
+.live-dot { position: absolute; right: -2px; bottom: -2px; width: 12px; height: 12px; border-radius: 50%; background: var(--phthalo); box-shadow: 0 0 0 2px var(--wall); }
+.member.you .avatar { font-size: 11px; }
+.members .more { display: none; }
+@container (max-width: 1300px) {
+  .room-grid { grid-template-columns: 180px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .channel { grid-column: 2; grid-row: 1 / 3; }
+  .members { grid-column: 1; grid-row: 2; }
+  .members .more { display: inline-flex; }
+  .members:not(.all) .idle { display: none; }
+}
+@container (max-width: 760px) {
+  .room-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; gap: var(--s3); height: max(420px, calc(100vh - 200px)); }
+  .channels ul { display: flex; flex-wrap: wrap; gap: var(--s1); }
+  .studio .wall .channels button { width: auto; }
+  .members { grid-column: 1; grid-row: 3; display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s4); overflow: visible; }
+  .studio .members h3 { margin: 0; }
+  .members h4 { display: none; }
+  .members ul { display: flex; flex-wrap: wrap; gap: 0 var(--s4); }
+  .channel { grid-column: 1; grid-row: 2; } /* the messages come before the members, so they start above the fold */
+}
+.room-scroll ol[hidden] { display: none; }

@@ -15,19 +15,21 @@ export const ID = {
 
 export const AUDIENCES = ['early-chapter', 'middle-grade', 'young-adult', 'new-adult', 'adult'] as const
 export const GENRES = ['literary', 'mystery', 'thriller', 'romance', 'fantasy', 'science-fiction', 'horror', 'historical'] as const
-export const REVIEWERS = ['continuity', 'character', 'developmental', 'line', 'audience', 'canon-auditor', 'gate', 'arc', 'flow'] as const
-export const REQUIRED_REVIEWERS = ['continuity', 'character', 'developmental', 'line', 'audience', 'canon-auditor', 'gate'] as const
+export const REVIEWERS = ['continuity', 'character', 'developmental', 'line', 'audience', 'reader', 'canon-auditor', 'gate', 'arc', 'flow'] as const
+export const REQUIRED_REVIEWERS = ['continuity', 'character', 'developmental', 'line', 'audience', 'reader', 'canon-auditor', 'gate'] as const
 
+/** Lowercase words joined by hyphens: book, series and skill ids, safe as a path segment. */
+export const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/
 const id = (re: RegExp, what: string) => z.string().regex(re, `not a valid ${what} id`)
 const text = z.string().min(1)
 
 export const Book = z.object({
-  id: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'book id must be lowercase words joined by hyphens'),
+  id: z.string().regex(SLUG, 'book id must be lowercase words joined by hyphens'),
   title: text,
   status: z.enum(['active', 'archived']),
   audience: z.enum(AUDIENCES),
   genres: z.array(z.enum(GENRES)).min(1),
-  series: z.string().nullable(),
+  series: z.string().regex(SLUG, 'series must be lowercase words joined by hyphens').nullable(),
   predecessor: z.string().nullable(),
   wordTarget: z.number().int().positive(),
   kitVersion: text,
@@ -127,13 +129,13 @@ export const ChangeRequest = z.object({
 }).refine(c => !!(c.canon?.length || c.manuscript?.length || c.outline?.length), 'needs at least one canon, manuscript or outline change')
 
 export const Series = z.object({
-  id: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
+  id: z.string().regex(SLUG),
   title: text,
-  books: z.array(z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/))
+  books: z.array(z.string().regex(SLUG))
 })
 
 export const Review = z.object({
-  scene: z.union([id(ID.scene, 'scene'), id(ID.chapter, 'chapter'), id(ID.act, 'act')]),
+  scene: z.union([id(ID.scene, 'scene'), id(ID.chapter, 'chapter'), id(ID.act, 'act'), z.literal('BOOK')]),
   reviewer: z.enum(REVIEWERS),
   round: z.number().int().min(1),
   verdict: z.enum(['PASS', 'FLAG', 'FAIL']),
@@ -161,11 +163,13 @@ export const RunState = z.object({
   // Old state files predate the option; they paused at every act.
   pauseAtActs: z.boolean().default(true),
   spentUsd: z.number().min(0),
-  current: z.object({ kind: z.enum(['scene', 'chapter', 'act']), id: text, round: z.number().int().min(1) }).nullable(),
+  current: z.object({ kind: z.enum(['scene', 'chapter', 'act', 'book']), id: text, round: z.number().int().min(1) }).nullable(),
   completed: z.array(id(ID.scene, 'scene')),
   parked: z.array(id(ID.scene, 'scene')),
   checkedChapters: z.array(id(ID.chapter, 'chapter')),
   checkedActs: z.array(id(ID.act, 'act')),
+  // Old state files predate the book check; a finished book is checked on its next run.
+  checkedBook: z.boolean().default(false),
   resumeAfter: z.string().nullable(),
   lastError: z.string().nullable()
 })
@@ -190,7 +194,7 @@ const RULES: [RegExp, z.ZodTypeAny, boolean][] = [
   [/^canon\/knowledge\.yaml$/, Knowledge, false],
   [/^proposals\/P-\d{4,}\.yaml$/, Proposal, false],
   [/^reviews\/(SC-\d{3,}|CH-\d{2,}|ACT-\d+)\/park\.md$/, Park, true],
-  [/^reviews\/(SC-\d{3,}|CH-\d{2,}|ACT-\d+)\/[a-z-]+\.md$/, Review, true],
+  [/^reviews\/(SC-\d{3,}|CH-\d{2,}|ACT-\d+|BOOK)\/[a-z-]+\.md$/, Review, true],
   [/^notes\/open-questions\.yaml$/, OpenQuestions, false],
   [/^notes\/changes\/CHG-\d{4,}\.yaml$/, ChangeRequest, false],
   [/^bible\/characters\/CHAR-[A-Z0-9-]+\.md$/, Character, true],

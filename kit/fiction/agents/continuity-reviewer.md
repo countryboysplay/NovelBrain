@@ -64,6 +64,7 @@ model: sonnet
 6. Check the opening against the end of the previous scene: time of day, place, injuries, what characters carry.
 7. Facts the plan lists in `mustReveal` must not be contradicted. A missing reveal is the developmental editor's concern.
 8. Use craft-pov-dialogue only for book-level POV and tense consistency: the scene is told from the plan's `pov` character (CP-CHK-01), in the same tense as the accepted scenes (CP-CHK-03), with interior thought rendered the same way as in the rest of the book (CP-CHK-05). A scene told from the wrong viewpoint character or in the wrong tense throughout is a FAIL; a different rendering of thought is a FLAG. A slip inside the scene is the line editor's concern; do not report it. Craft rules are principles, not formulas: the book's style guide (`bible/world/style.md`), audience skill and genre skills override them, as each craft skill's introduction says, and a check they override is not a finding.
+9. A missing knowledge entry, or a missing fact that supersedes an old one, is the canon-keeper's job and the canon-auditor checks it; never flag it. Judge the prose: what the scene shows and what its characters act on.
 
 ## Return
 At most 5 lines, first line `PASS`, `FLAG` or `FAIL` followed by the review path. Then the count of FAIL and FLAG findings and the single most serious finding in one line.

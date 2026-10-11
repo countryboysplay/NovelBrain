@@ -27093,16 +27093,17 @@ var ID = {
 };
 var AUDIENCES = ["early-chapter", "middle-grade", "young-adult", "new-adult", "adult"];
 var GENRES = ["literary", "mystery", "thriller", "romance", "fantasy", "science-fiction", "horror", "historical"];
-var REVIEWERS = ["continuity", "character", "developmental", "line", "audience", "canon-auditor", "gate", "arc", "flow"];
+var REVIEWERS = ["continuity", "character", "developmental", "line", "audience", "reader", "canon-auditor", "gate", "arc", "flow"];
+var SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 var id = (re, what) => external_exports.string().regex(re, `not a valid ${what} id`);
 var text = external_exports.string().min(1);
 var Book = external_exports.object({
-  id: external_exports.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "book id must be lowercase words joined by hyphens"),
+  id: external_exports.string().regex(SLUG, "book id must be lowercase words joined by hyphens"),
   title: text,
   status: external_exports.enum(["active", "archived"]),
   audience: external_exports.enum(AUDIENCES),
   genres: external_exports.array(external_exports.enum(GENRES)).min(1),
-  series: external_exports.string().nullable(),
+  series: external_exports.string().regex(SLUG, "series must be lowercase words joined by hyphens").nullable(),
   predecessor: external_exports.string().nullable(),
   wordTarget: external_exports.number().int().positive(),
   kitVersion: text,
@@ -27184,12 +27185,12 @@ var ChangeRequest = external_exports.object({
   outline: external_exports.array(external_exports.object({ scene: id(ID.scene, "scene"), status: external_exports.literal("planned") })).optional()
 }).refine((c) => !!(c.canon?.length || c.manuscript?.length || c.outline?.length), "needs at least one canon, manuscript or outline change");
 var Series = external_exports.object({
-  id: external_exports.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
+  id: external_exports.string().regex(SLUG),
   title: text,
-  books: external_exports.array(external_exports.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/))
+  books: external_exports.array(external_exports.string().regex(SLUG))
 });
 var Review = external_exports.object({
-  scene: external_exports.union([id(ID.scene, "scene"), id(ID.chapter, "chapter"), id(ID.act, "act")]),
+  scene: external_exports.union([id(ID.scene, "scene"), id(ID.chapter, "chapter"), id(ID.act, "act"), external_exports.literal("BOOK")]),
   reviewer: external_exports.enum(REVIEWERS),
   round: external_exports.number().int().min(1),
   verdict: external_exports.enum(["PASS", "FLAG", "FAIL"]),
@@ -27213,11 +27214,13 @@ var RunState = external_exports.object({
   // Old state files predate the option; they paused at every act.
   pauseAtActs: external_exports.boolean().default(true),
   spentUsd: external_exports.number().min(0),
-  current: external_exports.object({ kind: external_exports.enum(["scene", "chapter", "act"]), id: text, round: external_exports.number().int().min(1) }).nullable(),
+  current: external_exports.object({ kind: external_exports.enum(["scene", "chapter", "act", "book"]), id: text, round: external_exports.number().int().min(1) }).nullable(),
   completed: external_exports.array(id(ID.scene, "scene")),
   parked: external_exports.array(id(ID.scene, "scene")),
   checkedChapters: external_exports.array(id(ID.chapter, "chapter")),
   checkedActs: external_exports.array(id(ID.act, "act")),
+  // Old state files predate the book check; a finished book is checked on its next run.
+  checkedBook: external_exports.boolean().default(false),
   resumeAfter: external_exports.string().nullable(),
   lastError: external_exports.string().nullable()
 });
@@ -27239,7 +27242,7 @@ var RULES = [
   [/^canon\/knowledge\.yaml$/, Knowledge, false],
   [/^proposals\/P-\d{4,}\.yaml$/, Proposal, false],
   [/^reviews\/(SC-\d{3,}|CH-\d{2,}|ACT-\d+)\/park\.md$/, Park, true],
-  [/^reviews\/(SC-\d{3,}|CH-\d{2,}|ACT-\d+)\/[a-z-]+\.md$/, Review, true],
+  [/^reviews\/(SC-\d{3,}|CH-\d{2,}|ACT-\d+|BOOK)\/[a-z-]+\.md$/, Review, true],
   [/^notes\/open-questions\.yaml$/, OpenQuestions, false],
   [/^notes\/changes\/CHG-\d{4,}\.yaml$/, ChangeRequest, false],
   [/^bible\/characters\/CHAR-[A-Z0-9-]+\.md$/, Character, true],

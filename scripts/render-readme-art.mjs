@@ -22,6 +22,7 @@ const headers = [
   ['what-it-is', 'What it is', P.yellow],
   ['how-it-works', 'How it works', P.red],
   ['writing-loop', 'The writing loop', P.magenta],
+  ['memory', 'Memory', P.yellow],
   ['book-folder', 'The book folder', P.ultramarine],
   ['research', 'Research skills', P.green],
   ['today', 'The window today', P.magenta],

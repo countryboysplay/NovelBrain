@@ -26,6 +26,7 @@ test('creates a valid, committed book with the kit skills and hook settings', as
   expect(readdirSync(join(dir, '.claude', 'skills'))).toContain('audience-adult')
   expect(existsSync(join(dir, '.claude', 'settings.local.json'))).toBe(true)
   expect(readFileSync(join(dir, '.gitignore'), 'utf8')).toMatch(/settings\.local\.json/)
+  expect(readFileSync(join(dir, '.gitignore'), 'utf8').split('\n')).toContain('.novelbrain/memory.md')
   expect(await git(dir, 'status', '--porcelain')).toBe('')
   expect(await git(dir, 'log', '--format=%s')).toMatch(/Create The Long Green/)
 })

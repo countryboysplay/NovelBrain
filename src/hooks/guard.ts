@@ -18,7 +18,7 @@ const SHELL_TOOLS = ['Bash', 'PowerShell']
 const SAFE_CHARS = /^[A-Za-z0-9 ._/^~:=-]+$/
 const ARG = /^[A-Za-z0-9._/^~:-]+$/
 const GIT_FLAGS = new Set(['--stat', '--shortstat', '--numstat', '--summary', '--name-only', '--name-status', '--oneline', '--cached', '--staged', '-p', '--patch', '--no-color'])
-const ACCEPT_RE = /^node (?:\.novelbrain\/|\.\/\.novelbrain\/|\.novelbrain\\|\.\\\.novelbrain\\)accept\.mjs SC-\d{3,}$/
+const ACCEPT_RE = /^node (?:\.novelbrain\/|\.\/\.novelbrain\/|\.novelbrain\\|\.\\\.novelbrain\\)accept\.mjs SC-\d{3,}(?: --touchup| --sealed)?$/
 const isArg = (t: string) => ARG.test(t) && !t.startsWith('-')
 
 // Token allowlist: git can write files (--output), run programs (--ext-diff, -c) or read outside the book (--no-index).
@@ -55,7 +55,7 @@ export function decide(input: HookInput): Decision {
       const cmd = String(tool_input.command ?? '').trim()
       return shellAllowed(cmd)
         ? { allow: true }
-        : block(`Novel Brain allows only read-only git (diff, log, show) and "node .novelbrain/accept.mjs SC-###" in the shell. Refused: ${cmd}`)
+        : block(`Novel Brain allows only read-only git (diff, log, show) and "node .novelbrain/accept.mjs SC-###" (optionally with --touchup or --sealed) in the shell. Refused: ${cmd}`)
     }
     if (/^mcp__/.test(tool_name)) return block('MCP tools are not allowed inside a Novel Brain book.')
     const fields = WRITE_FIELDS[tool_name]

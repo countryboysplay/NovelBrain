@@ -9,15 +9,15 @@ Layers on top of the audience profile. Where this skill and the audience profile
 
 ## Reader promise
 - LIT-PROM-01: Promise an inward study of the human condition. Events matter because of how they affect the characters, so tie each major event to a visible change in a character's inner state. [S1]
-- LIT-PROM-02: The tone is described as introspective, and the category as a study of the human condition and of difficult social or political issues, so record the governing theme as a question in the story notes (house setting). [S1]
+- LIT-PROM-02: The tone is described as introspective, and the category as a study of the human condition and of difficult social or political issues, so record the governing theme as a question in the Story notes section of `bible/world/brief.md` (house setting). [S1]
 - LIT-PROM-03: The promise includes the quality of the prose. Literary fiction is described as driven by craft and the quality of the language, and it moves more slowly because the language gets so much attention. [S2]
 - LIT-PROM-04: Literary fiction aims to resemble real life and to show real-life reactions to complex events through developed characters, so keep reactions psychologically plausible. [S3]
 
 ## Structure
-- LIT-STR-01: A story arc may or may not be present, so decide on purpose whether the book has a conventional arc and record that choice in the story notes (house setting). [S1]
-- LIT-STR-02: A quiet book still needs a shape. One commenter relays a workshop idea of plot as shape, and an inner state such as unadmitted loneliness can count as the thing that happens, so name the shape of the character's change in one sentence in the story notes (house setting). [S6]
+- LIT-STR-01: A story arc may or may not be present, so decide on purpose whether the book has a conventional arc and record that choice in the Story notes section of `bible/world/brief.md` (house setting). [S1]
+- LIT-STR-02: A quiet book still needs a shape. One commenter relays a workshop idea of plot as shape, and an inner state such as unadmitted loneliness can count as the thing that happens, so name the shape of the character's change in one sentence in the Story notes section of `bible/world/brief.md` (house setting). [S6]
 - LIT-STR-03: Quiet stories draw their drama from small shifts and tend to reflect instead of resolve, so make each chapter turn on a small, nameable shift. [S6]
-- LIT-STR-04: Open endings are common in literary fiction and a satisfying ending is no guarantee, so choose the ending mode (resolved, open or ambiguous) and record it before drafting the last act (house setting). [S2][S1]
+- LIT-STR-04: Open endings are common in literary fiction and a satisfying ending is no guarantee, so choose the ending mode (resolved, open or ambiguous) and record it in the Ending section of `bible/world/brief.md` before drafting the last act (house setting). [S2][S1]
 - LIT-STR-05: The opening should establish who the reader is following, what is at stake and what conflict will drive the story. It need not open with the conflict itself. [S5]
 
 ## Conventions

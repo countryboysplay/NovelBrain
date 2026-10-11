@@ -29,7 +29,7 @@ Layers on top of the audience profile. Where this skill and the audience profile
 - THR-CONV-04: The antagonist is the engine of escalation. Make them competent, well-resourced and motivated, present throughout and not only at the climax, and able to believe they are right. [S1][S4][S3]
 - THR-CONV-05: Use dramatic irony. Letting the reader know of a danger the protagonist does not, such as a bomb under a table, builds suspense better than a surprise. [S2][S4]
 - THR-CONV-06: The protagonist's own choices, skill or hard-won knowledge decide the outcome, and they cannot be a passenger at their own climax. Flaws and something real to lose give them stakes. [S1][S4]
-- THR-CONV-07: Pick the subgenre early, since each carries expectations about pace, voice and detail: psychological, legal, spy, domestic, techno or crime and action. [S1]
+- THR-CONV-07: Pick the subgenre early and record it in the Shelf section of `bible/world/brief.md`, since each carries expectations about pace, voice and detail: psychological, legal, spy, domestic, techno or crime and action. [S1]
 - THR-CONV-08: First person or close third keeps the tension in what the character does not yet know. Add other viewpoints, including the villain's, only when they add tension the original could not. [S1]
 
 ## Pitfalls
@@ -44,7 +44,7 @@ Layers on top of the audience profile. Where this skill and the audience profile
 Builds on the reader-engagement skill.
 - THR-ENG-01: Chapter one puts the protagonist in trouble or poses a sharp question within its first 1,000 words (house setting). [S1][S4]
   Check: within the first 1,000 words you can point to a threat, a loss or a question the POV character cannot ignore.
-- THR-ENG-02: State the clock in one sentence in the story notes, and the text reminds the reader of it at least once in each quarter of the manuscript (house setting). [S4][S2]
+- THR-ENG-02: State the clock in one sentence in the Story notes section of `bible/world/brief.md`, and the text reminds the reader of it at least once in each quarter of the manuscript (house setting). [S4][S2]
   Check: quote the one-sentence clock, then find one on-page reminder of it in each quarter.
 - THR-ENG-03: Each scene ends with the protagonist worse off, or with a win that costs something or brings stronger opposition. [S1][S2]
   Check: write one line saying what got worse or what the win cost; if you cannot, the scene fails.

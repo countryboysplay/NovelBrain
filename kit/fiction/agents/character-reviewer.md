@@ -62,6 +62,7 @@ model: sonnet
 7. A voice slip in one line is a FLAG; a character who sounds like someone else for the whole scene is a FAIL.
 8. FAIL only for a problem that must be fixed before the scene can stand; everything else is FLAG.
 9. Apply and cite the craft checks for your concern: CC-CHK-05 (a choice under pressure that shows consistency or change), CC-CHK-06 (secondary characters and adversaries want something of their own), CC-CHK-07 (each speaker distinct and consistent), CP-CHK-02 (the POV character reports nothing they cannot perceive; canon facts stay under rule 3), CP-CHK-06, CP-CHK-07 and CP-CHK-09 (dialogue does work, does not serve the reader at the characters' expense, dialect applied evenly). Craft findings are FLAG unless they also meet a FAIL in the rules above. Viewpoint and tense slips in the narration belong to the line editor. Craft rules are principles, not formulas: the book's style guide (`bible/world/style.md`), audience skill and genre skills override them, as each craft skill's introduction says, and a check they override is not a finding.
+10. A missing knowledge entry, or a missing fact that supersedes an old one, is the canon-keeper's job and the canon-auditor checks it; never flag it. Judge the prose: what the scene shows and what its characters act on.
 
 ## Return
 At most 5 lines, first line `PASS`, `FLAG` or `FAIL` followed by `reviews/SC-###/character.md`. Then the count of FAIL and FLAG findings and the single most serious finding in one line.
