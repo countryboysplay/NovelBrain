@@ -22,4 +22,12 @@ jobs:
         run: |
           npm run build:hooks
           git diff --exit-code -- resources/
+      # The runner's screen is 1024x768, which clamps the 1400px window into the narrow layout (usage tag hidden,
+      # terminal folded); the smoke tests check the wide one.
+      - name: Screen at 1920x1080
+        shell: pwsh
+        run: |
+          Set-DisplayResolution -Width 1920 -Height 1080 -Force
+          Add-Type -AssemblyName System.Windows.Forms
+          [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
       - run: npm run smoke
