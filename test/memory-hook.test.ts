@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
@@ -26,7 +26,7 @@ test('start prints the briefing for a session anywhere inside the book', () => {
 test('enqueue appends a distill job with the book root', () => {
   const { mem, book } = setup()
   run('enqueue', JSON.stringify({ cwd: book, transcript_path: 'C:/t/x.jsonl' }), { NB_MEMORY_DIR: mem })
-  expect(JSON.parse(readFileSync(join(mem, '.queue'), 'utf8'))).toEqual({ kind: 'distill', transcript: 'C:/t/x.jsonl', book })
+  expect(JSON.parse(readFileSync(join(mem, '.queue'), 'utf8'))).toEqual({ kind: 'distill', transcript: 'C:/t/x.jsonl', book: realpathSync.native(book) }) // the hook resolves 8.3 names (CI's RUNNER~1)
 })
 test('the distiller own sessions, bad input and a missing memory folder are silent no-ops', () => {
   const { mem, book } = setup()
